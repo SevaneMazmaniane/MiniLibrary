@@ -526,11 +526,11 @@ Return only plain text.
         var eventsForPrompt = string.Join("\n", allEvents.Select(e =>
             $"EventId: {e.Id}; Title: {e.Title}; Category: {e.Category}; Location: {e.Location}; Description: {e.Description ?? "N/A"}"));
 
-        var prompt = $"""
+        var prompt = $@"
 You are recommending mini library events for a user based on books they have borrowed.
 Given the borrowed books and available events, select up to 3 event IDs most likely to match the user's interests.
 Return ONLY minified JSON with this exact schema:
-{"recommendedEventIds":[1,2],"reason":"short reason"}
+{{""recommendedEventIds"":[1,2],""reason"":""short reason""}}
 Do not include markdown or extra text.
 
 Borrowed books:
@@ -538,7 +538,7 @@ Borrowed books:
 
 Available events:
 {eventsForPrompt}
-""";
+";
 
         try
         {
