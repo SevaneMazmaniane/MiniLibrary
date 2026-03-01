@@ -220,7 +220,7 @@ public class EventsController : Controller
         }
 
         ViewBag.CurrentAttendance = userId is null
-            ? null
+            ? (EventParticipationStatus?)null
             : item.Attendees.FirstOrDefault(a => a.UserId == userId)?.Status ?? EventParticipationStatus.Upcoming;
 
         return View(item);
