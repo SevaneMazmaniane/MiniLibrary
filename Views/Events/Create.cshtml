@@ -1,0 +1,25 @@
+@model MiniLibrary.Models.EventFormViewModel
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<h1 class="h3 mb-3">Create Book/Art Event</h1>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (TempData["AiEventDescription"] is string aiDescription)
+{
+    <div class="alert alert-success">
+        <strong>AI Enhanced Description:</strong>
+        <p class="mb-0 mt-2">@aiDescription</p>
+    </div>
+}
+
+<form asp-action="Create" method="post" class="col-lg-8 px-0">
+    <partial name="_EventForm" model="Model" />
+    <button class="btn btn-primary" type="submit">Save Event</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</form>

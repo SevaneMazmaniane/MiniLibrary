@@ -1,0 +1,49 @@
+@model List<MiniLibrary.Models.EventInvitationListItem>
+@{
+    ViewData["Title"] = "My Invitations";
+}
+
+<h1 class="h3 mb-3">My Event Invitations</h1>
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Respond</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var invitation in Model)
+        {
+            <tr>
+                <td>@invitation.EventTitle</td>
+                <td>@invitation.StartAtUtc.ToLocalTime().ToString("g")</td>
+                <td>@invitation.Location</td>
+                <td>@invitation.Status</td>
+                <td>
+                    <form asp-action="RespondInvitation" method="post" class="d-flex gap-1 flex-wrap">
+                        <input type="hidden" name="invitationId" value="@invitation.InvitationId" />
+                        <button class="btn btn-sm btn-outline-success" type="submit" name="status" value="Attending">Attend</button>
+                        <button class="btn btn-sm btn-outline-warning" type="submit" name="status" value="Maybe">Maybe</button>
+                        <button class="btn btn-sm btn-outline-danger" type="submit" name="status" value="Declined">Decline</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No invitations yet.</div>
+}

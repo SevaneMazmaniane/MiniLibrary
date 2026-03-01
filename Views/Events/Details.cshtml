@@ -1,0 +1,108 @@
+@model MiniLibrary.Models.EventItem
+@{
+    ViewData["Title"] = "Event Details";
+    var currentAttendance = ViewBag.CurrentAttendance as MiniLibrary.Models.EventParticipationStatus?;
+    var canManage = User.IsInRole("Admin");
+}
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="h3 mb-1">@Model.Title</h1>
+        <p class="text-muted mb-0">@Model.Category event by @(Model.Organizer?.DisplayName ?? Model.Organizer?.Email ?? "Organizer")</p>
+    </div>
+    @if (canManage)
+    {
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Edit</a>
+            <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this event?');">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
+        </div>
+    }
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <p><strong>When:</strong> @Model.StartAtUtc.ToLocalTime().ToString("f")</p>
+        <p><strong>Where:</strong> @Model.Location</p>
+        <p class="mb-0"><strong>Description:</strong> @(Model.Description ?? "No description yet.")</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5">Your Status</h2>
+        <p class="small text-muted">Current status: <strong>@(currentAttendance?.ToString() ?? "Upcoming")</strong></p>
+        <form asp-action="RSVP" method="post" class="d-flex flex-wrap gap-2">
+            <input type="hidden" name="id" value="@Model.Id" />
+            @foreach (var option in Enum.GetValues<MiniLibrary.Models.EventParticipationStatus>())
+            {
+                <button type="submit" class="btn btn-sm btn-outline-secondary" name="status" value="@option">@option</button>
+            }
+        </form>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Attendees</h2>
+                <ul class="list-group list-group-flush">
+                    @foreach (var attendee in Model.Attendees.OrderBy(a => a.User?.Email))
+                    {
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span>@(attendee.User?.DisplayName ?? attendee.User?.Email ?? attendee.UserId)</span>
+                            <span class="badge text-bg-light">@attendee.Status</span>
+                        </li>
+                    }
+                </ul>
+                @if (!Model.Attendees.Any())
+                {
+                    <p class="small text-muted mb-0">No responses yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Invitations</h2>
+                @if (canManage)
+                {
+                    <form asp-action="Invite" method="post" class="mb-3">
+                        <input type="hidden" name="EventId" value="@Model.Id" />
+                        <div class="input-group">
+                            <input class="form-control" name="InviteeEmail" type="email" placeholder="Invite by email" required />
+                            <button class="btn btn-outline-primary" type="submit">Invite</button>
+                        </div>
+                    </form>
+                }
+                <ul class="list-group list-group-flush">
+                    @foreach (var invite in Model.Invitations.OrderBy(i => i.InviteeEmail))
+                    {
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span>@invite.InviteeEmail</span>
+                            <span class="badge text-bg-light">@invite.Status</span>
+                        </li>
+                    }
+                </ul>
+                @if (!Model.Invitations.Any())
+                {
+                    <p class="small text-muted mb-0">No invitations sent.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

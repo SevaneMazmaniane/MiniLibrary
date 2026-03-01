@@ -1,0 +1,41 @@
+@model MiniLibrary.Models.EventFormViewModel
+
+<div class="mb-3">
+    <label asp-for="Title" class="form-label"></label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="text-danger"></span>
+</div>
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="StartAtUtc" class="form-label"></label>
+        <input asp-for="StartAtUtc" class="form-control" />
+        <span asp-validation-for="StartAtUtc" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="EndAtUtc" class="form-label"></label>
+        <input asp-for="EndAtUtc" class="form-control" />
+        <span asp-validation-for="EndAtUtc" class="text-danger"></span>
+    </div>
+</div>
+<div class="row g-3 mt-1">
+    <div class="col-md-6">
+        <label asp-for="Location" class="form-label"></label>
+        <input asp-for="Location" class="form-control" />
+        <span asp-validation-for="Location" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Category" class="form-label"></label>
+        <select asp-for="Category" asp-items="Html.GetEnumSelectList<MiniLibrary.Models.EventCategory>()" class="form-select"></select>
+    </div>
+</div>
+<div class="mb-3 mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <label asp-for="Description" class="form-label mb-0"></label>
+        <input type="hidden" name="returnAction" value="@ViewContext.RouteData.Values["action"]" />
+        <button type="submit" class="btn btn-sm btn-outline-info" formaction="@Url.Action("AiEnhanceDescription", "Events")" formmethod="post">
+            Enhance with AI
+        </button>
+    </div>
+    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+    <span asp-validation-for="Description" class="text-danger"></span>
+</div>
