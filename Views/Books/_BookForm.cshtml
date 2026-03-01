@@ -1,0 +1,13 @@
+@model Book
+<form method="post">
+    <input asp-for="Id" type="hidden" />
+    <label>Title <input asp-for="Title" /></label>
+    <label>Author <input asp-for="Author" /></label>
+    <label>Genre <input asp-for="Genre" /></label>
+    <label>ISBN <input asp-for="Isbn" /></label>
+    <label>Year <input asp-for="Year" type="number" /></label>
+    <label>Total Copies <input asp-for="TotalCopies" type="number" min="1" /></label>
+    <label>Description <textarea asp-for="Description"></textarea></label>
+    <button type="submit">Save</button>
+    <a asp-action="Index">Cancel</a>
+</form>
