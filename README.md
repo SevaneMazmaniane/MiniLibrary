@@ -7,8 +7,8 @@ This project is an ASP.NET Core MVC web app that implements a mini library syste
 - **Search & filtering**: by title, author, ISBN, and genre.
 - **Authentication + SSO**:
   - Built-in ASP.NET Core Identity (local username/password).
+  - Custom Login/Register pages are available at `/Identity/Account/Login` and `/Identity/Account/Register`.
   - Optional Google OAuth login (SSO) if credentials are configured.
-- **Custom auth UI**: project now includes explicit Login and Register Razor Pages under `Areas/Identity/Pages/Account` for local auth.
 - **Roles and permissions**:
   - `Admin`: full CRUD for books.
   - `Member`: can search, borrow, return, and use AI features.

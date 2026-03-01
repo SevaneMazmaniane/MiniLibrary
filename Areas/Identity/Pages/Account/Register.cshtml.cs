@@ -20,25 +20,29 @@ public class RegisterModel : PageModel
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
+    [BindProperty(SupportsGet = true)]
     public string? ReturnUrl { get; set; }
 
     public class InputModel
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        [StringLength(100, MinimumLength = 3)]
+        [Display(Name = "Display name")]
+        public string DisplayName { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(100, MinimumLength = 3)]
-        public string DisplayName { get; set; } = string.Empty;
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100, MinimumLength = 6)]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
+        [Required]
         [DataType(DataType.Password)]
         [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        [Display(Name = "Confirm password")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 
@@ -49,7 +53,7 @@ public class RegisterModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        ReturnUrl = returnUrl ?? Url.Content("~/");
+        ReturnUrl = returnUrl ?? ReturnUrl ?? Url.Content("~/");
 
         if (!ModelState.IsValid)
         {

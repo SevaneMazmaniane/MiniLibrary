@@ -18,8 +18,9 @@ public class LoginModel : PageModel
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
+    [BindProperty(SupportsGet = true)]
     public string? ReturnUrl { get; set; }
-    public string? ErrorMessage { get; set; }
+
     public bool ShowGoogleLogin { get; set; }
 
     public class InputModel
@@ -32,6 +33,7 @@ public class LoginModel : PageModel
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
+        [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }
     }
 
@@ -44,7 +46,7 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        ReturnUrl = returnUrl ?? Url.Content("~/");
+        ReturnUrl = returnUrl ?? ReturnUrl ?? Url.Content("~/");
         ShowGoogleLogin = (await _signInManager.GetExternalAuthenticationSchemesAsync())
             .Any(s => s.Name == "Google");
 
@@ -53,18 +55,19 @@ public class LoginModel : PageModel
             return Page();
         }
 
-        var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
         if (result.Succeeded)
         {
             return LocalRedirect(ReturnUrl);
         }
 
-        if (result.RequiresTwoFactor)
+        if (result.IsLockedOut)
         {
-            return RedirectToPage("./LoginWith2fa", new { ReturnUrl, Input.RememberMe });
+            ModelState.AddModelError(string.Empty, "Your account is temporarily locked due to multiple failed attempts. Please try again later.");
+            return Page();
         }
 
-        ErrorMessage = "Invalid login attempt.";
+        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
         return Page();
     }
 }

@@ -4,36 +4,38 @@
     ViewData["Title"] = "Login";
 }
 
-<h1>Login</h1>
+<section class="auth-card">
+    <h1>Login</h1>
+    <p>Access your library account to borrow books and manage your profile.</p>
 
-@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-{
-    <div class="alert error">@Model.ErrorMessage</div>
-}
+    <form method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div asp-validation-summary="ModelOnly" class="alert error"></div>
 
-<form method="post">
-    <label>Email <input asp-for="Input.Email" /></label>
-    <span asp-validation-for="Input.Email"></span>
+        <label asp-for="Input.Email">Email</label>
+        <input asp-for="Input.Email" type="email" autocomplete="email" />
+        <span asp-validation-for="Input.Email" class="text-error"></span>
 
-    <label>Password <input asp-for="Input.Password" type="password" /></label>
-    <span asp-validation-for="Input.Password"></span>
+        <label asp-for="Input.Password">Password</label>
+        <input asp-for="Input.Password" type="password" autocomplete="current-password" />
+        <span asp-validation-for="Input.Password" class="text-error"></span>
 
-    <label>
-        <input asp-for="Input.RememberMe" /> Remember me
-    </label>
+        <label class="checkbox-label">
+            <input asp-for="Input.RememberMe" /> @Html.DisplayNameFor(m => m.Input.RememberMe)
+        </label>
 
-    <button type="submit">Login</button>
-</form>
-
-@if (Model.ShowGoogleLogin)
-{
-    <hr />
-    <form asp-page="./ExternalLogin" asp-route-provider="Google" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-        <button type="submit">Login with Google</button>
+        <button type="submit">Login</button>
     </form>
-}
 
-<p>
-    No account? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register here</a>
-</p>
+    @if (Model.ShowGoogleLogin)
+    {
+        <hr />
+        <form asp-page="./ExternalLogin" asp-route-provider="Google" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <button type="submit">Continue with Google</button>
+        </form>
+    }
 
+    <p>
+        No account? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create one here</a>
+    </p>
+</section>

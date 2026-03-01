@@ -4,25 +4,34 @@
     ViewData["Title"] = "Register";
 }
 
-<h1>Register</h1>
+<section class="auth-card">
+    <h1>Register</h1>
+    <p>Create an account to borrow books, get AI insights, and track your loans.</p>
 
-<form method="post">
-    <label>Email <input asp-for="Input.Email" /></label>
-    <span asp-validation-for="Input.Email"></span>
+    <form method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div asp-validation-summary="ModelOnly" class="alert error"></div>
 
-    <label>Display Name <input asp-for="Input.DisplayName" /></label>
-    <span asp-validation-for="Input.DisplayName"></span>
+        <label asp-for="Input.DisplayName">Display Name</label>
+        <input asp-for="Input.DisplayName" autocomplete="name" />
+        <span asp-validation-for="Input.DisplayName" class="text-error"></span>
 
-    <label>Password <input asp-for="Input.Password" type="password" /></label>
-    <span asp-validation-for="Input.Password"></span>
+        <label asp-for="Input.Email">Email</label>
+        <input asp-for="Input.Email" type="email" autocomplete="email" />
+        <span asp-validation-for="Input.Email" class="text-error"></span>
 
-    <label>Confirm Password <input asp-for="Input.ConfirmPassword" type="password" /></label>
-    <span asp-validation-for="Input.ConfirmPassword"></span>
+        <label asp-for="Input.Password">Password</label>
+        <input asp-for="Input.Password" type="password" autocomplete="new-password" />
+        <span asp-validation-for="Input.Password" class="text-error"></span>
 
-    <button type="submit">Create Account</button>
-</form>
+        <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+        <input asp-for="Input.ConfirmPassword" type="password" autocomplete="new-password" />
+        <span asp-validation-for="Input.ConfirmPassword" class="text-error"></span>
 
-<p>
-    Already have an account? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
-</p>
+        <button type="submit">Create Account</button>
+    </form>
 
+    <p>
+        Already have an account? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
+    </p>
+</section>
