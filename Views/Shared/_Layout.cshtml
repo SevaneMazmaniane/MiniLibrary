@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MiniLibrary</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <a asp-controller="Books" asp-action="Index">Books</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-area="Identity" asp-page="/Account/Manage/Index">Account</a>
+                <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                    <button type="submit">Logout</button>
+                </form>
+            }
+            else
+            {
+                <a asp-area="Identity" asp-page="/Account/Login">Login</a>
+                <a asp-area="Identity" asp-page="/Account/Register">Register</a>
+            }
+        </nav>
+    </header>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+</body>
+</html>
