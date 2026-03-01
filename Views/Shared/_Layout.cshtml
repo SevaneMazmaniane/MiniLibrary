@@ -39,7 +39,7 @@
                         <div class="d-flex align-items-center gap-2">
                             @if (User.Identity?.IsAuthenticated == true)
                             {
-                                <a class="btn btn-stone btn-sm" asp-area="Identity" asp-page="/Account/Manage/Index">Account</a>
+                                <a class="btn btn-stone btn-sm" asp-controller="Account" asp-action="Index">Account</a>
                                 <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-outline-ink btn-sm">Logout</button>
                                 </form>
