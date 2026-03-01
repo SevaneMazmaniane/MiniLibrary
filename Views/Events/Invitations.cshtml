@@ -1,49 +1,95 @@
 @model List<MiniLibrary.Models.EventInvitationListItem>
 @{
-    ViewData["Title"] = "My Invitations";
+    ViewData["Title"] = "Invitations";
+    var isAdmin = ViewBag.IsAdmin is bool b && b;
 }
 
-<h1 class="h3 mb-3">My Event Invitations</h1>
+<div class="hero-panel mb-4">
+    <p class="ancient-subtitle mb-2">Correspondence Ledger</p>
+    <h1 class="h3 mb-0">@(isAdmin ? "Invitations Sent" : "Invitations Received")</h1>
+</div>
 
 @if (TempData["Message"] is string message)
 {
     <div class="alert alert-success">@message</div>
 }
 
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Event</th>
-                <th>Date</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Respond</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var invitation in Model)
-        {
-            <tr>
-                <td>@invitation.EventTitle</td>
-                <td>@invitation.StartAtUtc.ToLocalTime().ToString("g")</td>
-                <td>@invitation.Location</td>
-                <td>@invitation.Status</td>
-                <td>
-                    <form asp-action="RespondInvitation" method="post" class="d-flex gap-1 flex-wrap">
-                        <input type="hidden" name="invitationId" value="@invitation.InvitationId" />
-                        <button class="btn btn-sm btn-outline-success" type="submit" name="status" value="Attending">Attend</button>
-                        <button class="btn btn-sm btn-outline-warning" type="submit" name="status" value="Maybe">Maybe</button>
-                        <button class="btn btn-sm btn-outline-danger" type="submit" name="status" value="Declined">Decline</button>
-                    </form>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-</div>
-
-@if (!Model.Any())
+@if (isAdmin)
 {
-    <div class="alert alert-info">No invitations yet.</div>
+    <div class="table-scroll">
+        <table class="table table-modern align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Sent to</th>
+                    <th>Event</th>
+                    <th>Event date</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Sent</th>
+                    <th>Responded</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var invitation in Model)
+            {
+                <tr>
+                    <td>@(invitation.InviteeEmail ?? "Unknown")</td>
+                    <td class="fw-semibold">@invitation.EventTitle</td>
+                    <td>@invitation.StartAtUtc.ToLocalTime().ToString("g")</td>
+                    <td>@invitation.Location</td>
+                    <td><span class="badge mono-badge">@invitation.Status</span></td>
+                    <td>@invitation.SentAtUtc.ToLocalTime().ToString("g")</td>
+                    <td>@(invitation.RespondedAtUtc.HasValue ? invitation.RespondedAtUtc.Value.ToLocalTime().ToString("g") : "-")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-secondary border-dark-subtle mt-3">No invitations sent yet.</div>
+    }
+}
+else
+{
+    <div class="table-scroll">
+        <table class="table table-modern align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>Event</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Respond</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var invitation in Model)
+            {
+                <tr>
+                    <td>@(string.IsNullOrWhiteSpace(invitation.InviterEmail) ? "Admin" : invitation.InviterEmail)</td>
+                    <td class="fw-semibold">@invitation.EventTitle</td>
+                    <td>@invitation.StartAtUtc.ToLocalTime().ToString("g")</td>
+                    <td>@invitation.Location</td>
+                    <td><span class="badge mono-badge">@invitation.Status</span></td>
+                    <td>
+                        <form asp-action="RespondInvitation" method="post" class="d-flex gap-1 flex-wrap">
+                            <input type="hidden" name="invitationId" value="@invitation.InvitationId" />
+                            <button class="btn btn-sm btn-outline-success" type="submit" name="status" value="Attending">Attend</button>
+                            <button class="btn btn-sm btn-outline-warning" type="submit" name="status" value="Maybe">Maybe</button>
+                            <button class="btn btn-sm btn-outline-danger" type="submit" name="status" value="Declined">Decline</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-secondary border-dark-subtle mt-3">No invitations received yet.</div>
+    }
 }
