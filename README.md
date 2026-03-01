@@ -123,7 +123,7 @@ On startup, the app automatically applies migrations and seeds initial data.
 
 ## Deploy on Render (Free)
 
-This repository now includes a `render.yaml` blueprint for one-click deployment from GitHub.
+This repository now includes a `render.yaml` blueprint and a production `Dockerfile` for one-click deployment from GitHub.
 
 ### 1) Push this branch to GitHub
 
@@ -136,7 +136,7 @@ git push -u origin release/render-free
 - In Render, choose **New +** → **Blueprint**.
 - Connect your GitHub repository.
 - Select this `release/render-free` branch.
-- Render will detect `render.yaml` and provision the service.
+- Render will detect `render.yaml`, build using the included `Dockerfile`, and provision the service.
 
 ### 3) Configure optional secrets in Render
 
