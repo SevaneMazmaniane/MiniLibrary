@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -56,6 +57,9 @@ public class EventsController : Controller
         }
 
         filter.Events = await query.OrderBy(e => e.StartAtUtc).ToListAsync();
+
+        await PopulateRecommendationsForReaderAsync(filter);
+
         return View(filter);
     }
 
@@ -466,5 +470,126 @@ Return only plain text.
         TempData["AiEventId"] = model.Id?.ToString();
 
         return RedirectToForm(nameof(Create), model.Id);
+    }
+
+
+    private sealed class EventRecommendationAiResult
+    {
+        public List<int>? RecommendedEventIds { get; set; }
+        public string? Reason { get; set; }
+    }
+
+    private async Task PopulateRecommendationsForReaderAsync(EventSearchViewModel filter)
+    {
+        if (User.Identity?.IsAuthenticated != true || User.IsInRole("Admin"))
+        {
+            return;
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return;
+        }
+
+        var borrowedBookIds = await _context.BookLoans
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.BorrowedAtUtc)
+            .Select(x => x.BookId)
+            .Distinct()
+            .Take(20)
+            .ToListAsync();
+
+        filter.HasBorrowedBooksForRecommendations = borrowedBookIds.Any();
+        if (!filter.HasBorrowedBooksForRecommendations)
+        {
+            return;
+        }
+
+        var borrowedBooks = await _context.Books
+            .Where(x => borrowedBookIds.Contains(x.Id))
+            .ToListAsync();
+
+        var allEvents = await _context.EventItems
+            .OrderBy(x => x.StartAtUtc)
+            .Take(30)
+            .ToListAsync();
+
+        if (!allEvents.Any())
+        {
+            return;
+        }
+
+        var booksForPrompt = string.Join("\n", borrowedBooks.Select((b, idx) =>
+            $"{idx + 1}. Title: {b.Title}; Author: {b.Author}; Genre: {b.Genre ?? "Unknown"}; Description: {b.Description ?? "N/A"}"));
+
+        var eventsForPrompt = string.Join("\n", allEvents.Select(e =>
+            $"EventId: {e.Id}; Title: {e.Title}; Category: {e.Category}; Location: {e.Location}; Description: {e.Description ?? "N/A"}"));
+
+        var prompt = $"""
+You are recommending mini library events for a user based on books they have borrowed.
+Given the borrowed books and available events, select up to 3 event IDs most likely to match the user's interests.
+Return ONLY minified JSON with this exact schema:
+{"recommendedEventIds":[1,2],"reason":"short reason"}
+Do not include markdown or extra text.
+
+Borrowed books:
+{booksForPrompt}
+
+Available events:
+{eventsForPrompt}
+""";
+
+        try
+        {
+            var aiText = await _geminiService.GenerateBookInsightsAsync(prompt);
+            var json = ExtractJsonObject(aiText);
+            var parsed = JsonSerializer.Deserialize<EventRecommendationAiResult>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var ids = parsed?.RecommendedEventIds?
+                .Where(x => allEvents.Any(e => e.Id == x))
+                .Distinct()
+                .Take(3)
+                .ToList() ?? [];
+
+            filter.RecommendedEvents = allEvents.Where(e => ids.Contains(e.Id)).ToList();
+            filter.RecommendationReason = parsed?.Reason;
+        }
+        catch
+        {
+            var genreText = string.Join(" ", borrowedBooks
+                    .Select(b => $"{b.Genre} {b.Description} {b.Title}")
+                    .Where(x => !string.IsNullOrWhiteSpace(x)))
+                .ToLowerInvariant();
+
+            var preferredCategory = genreText.Contains("art")
+                ? EventCategory.Art
+                : EventCategory.Book;
+
+            filter.RecommendedEvents = allEvents
+                .Where(e => e.Category == preferredCategory)
+                .Take(3)
+                .ToList();
+
+            filter.RecommendationReason = filter.RecommendedEvents.Any()
+                ? $"Based on your borrowed books, these {preferredCategory.ToString().ToLowerInvariant()} events may interest you."
+                : null;
+        }
+    }
+
+    private static string ExtractJsonObject(string raw)
+    {
+        var start = raw.IndexOf('{');
+        var end = raw.LastIndexOf('}');
+
+        if (start < 0 || end <= start)
+        {
+            throw new InvalidOperationException("No JSON object found in AI response.");
+        }
+
+        return raw[start..(end + 1)];
     }
 }
