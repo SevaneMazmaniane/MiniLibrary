@@ -22,7 +22,7 @@
     @if (canManage)
     {
         <div class="d-flex gap-2">
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Edit</a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-ink btn-sm">Edit</a>
             <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this event?');">
                 <input type="hidden" name="id" value="@Model.Id" />
                 <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
@@ -85,7 +85,7 @@
                         <input type="hidden" name="EventId" value="@Model.Id" />
                         <div class="input-group">
                             <input class="form-control" name="InviteeEmail" type="email" placeholder="Invite by email" required />
-                            <button class="btn btn-outline-primary" type="submit">Invite</button>
+                            <button class="btn btn-outline-ink" type="submit">Invite</button>
                         </div>
                     </form>
                 }

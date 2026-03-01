@@ -3,66 +3,74 @@
     ViewData["Title"] = "Book & Art Events";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Book & Art Events</h1>
-    @if (User.IsInRole("Admin"))
-    {
-        <a class="btn btn-primary" asp-action="Create">Create Event</a>
-    }
+<div class="hero-panel mb-4">
+    <p class="ancient-subtitle mb-2">The Agora Calendar</p>
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="h2 mb-2">Book & Art Events</h1>
+            <p class="mb-0 text-light-emphasis">Gatherings curated in an old-world monochrome atmosphere.</p>
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="btn btn-stone" asp-action="Create">Create Event</a>
+        }
+    </div>
 </div>
 
-<form method="get" class="card card-body mb-4">
+<form method="get" class="filter-panel mb-4">
     <div class="row g-3">
         <div class="col-md-3">
+            <label class="form-label">Query</label>
             <input asp-for="SearchTerm" class="form-control" placeholder="Title or description" />
         </div>
         <div class="col-md-2">
+            <label class="form-label">Location</label>
             <input asp-for="Location" class="form-control" placeholder="Location" />
         </div>
         <div class="col-md-2">
+            <label class="form-label">Start</label>
             <input asp-for="StartDate" class="form-control" type="date" />
         </div>
         <div class="col-md-2">
+            <label class="form-label">End</label>
             <input asp-for="EndDate" class="form-control" type="date" />
         </div>
         <div class="col-md-2">
+            <label class="form-label">Category</label>
             <select asp-for="Category" asp-items="Html.GetEnumSelectList<MiniLibrary.Models.EventCategory>()" class="form-select">
                 <option value="">All categories</option>
             </select>
         </div>
-        <div class="col-md-1 d-grid">
-            <button class="btn btn-outline-primary" type="submit">Find</button>
+        <div class="col-md-1 d-grid align-items-end">
+            <button class="btn btn-ink mt-md-4" type="submit">Find</button>
         </div>
     </div>
 </form>
-
 
 @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
 {
     if (Model.RecommendedEvents.Any())
     {
-        <div class="card border-success mb-4">
-            <div class="card-body">
-                <h2 class="h5">Recommended for You</h2>
-                @if (!string.IsNullOrWhiteSpace(Model.RecommendationReason))
+        <div class="pillar-card mb-4 p-3 p-md-4">
+            <h2 class="h5">Recommended for You</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.RecommendationReason))
+            {
+                <p class="small text-secondary mb-2">@Model.RecommendationReason</p>
+            }
+            <ul class="mb-0">
+                @foreach (var rec in Model.RecommendedEvents)
                 {
-                    <p class="small text-muted mb-2">@Model.RecommendationReason</p>
+                    <li>
+                        <a asp-action="Details" asp-route-id="@rec.Id" class="link-dark text-decoration-none fw-semibold">@rec.Title</a>
+                        <span class="text-secondary">(@rec.Category, @rec.StartAtUtc.ToLocalTime().ToString("g"))</span>
+                    </li>
                 }
-                <ul class="mb-0">
-                    @foreach (var rec in Model.RecommendedEvents)
-                    {
-                        <li>
-                            <a asp-action="Details" asp-route-id="@rec.Id">@rec.Title</a>
-                            <span class="text-muted">(@rec.Category, @rec.StartAtUtc.ToLocalTime().ToString("g"))</span>
-                        </li>
-                    }
-                </ul>
-            </div>
+            </ul>
         </div>
     }
     else if (!Model.HasBorrowedBooksForRecommendations)
     {
-        <div class="alert alert-info mb-4">
+        <div class="alert alert-secondary border-dark-subtle mb-4">
             Borrow books to get personalized event recommendations.
         </div>
     }
@@ -72,22 +80,24 @@
 @foreach (var item in Model.Events)
 {
     <div class="col-md-6 col-lg-4">
-        <div class="card h-100 shadow-sm">
+        <div class="card event-card h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="card-title">@item.Title</h5>
-                    @if (Model.RecommendedEvents.Any(x => x.Id == item.Id))
-                    {
-                        <span class="badge text-bg-success ms-2">Recommended</span>
-                    }
-                    <span class="badge text-bg-secondary">@item.Category</span>
+                <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                    <h5 class="card-title mb-0">@item.Title</h5>
+                    <div class="d-flex gap-1 flex-wrap justify-content-end">
+                        @if (Model.RecommendedEvents.Any(x => x.Id == item.Id))
+                        {
+                            <span class="badge mono-badge">Recommended</span>
+                        }
+                        <span class="badge mono-badge">@item.Category</span>
+                    </div>
                 </div>
-                <p class="small text-muted mb-2">@item.StartAtUtc.ToLocalTime().ToString("f")</p>
-                <p class="small text-muted mb-2">@item.Location</p>
+                <p class="small text-secondary mb-2">@item.StartAtUtc.ToLocalTime().ToString("f")</p>
+                <p class="small text-secondary mb-2">@item.Location</p>
                 <p class="card-text">@((item.Description ?? "No description").Length > 140 ? (item.Description ?? "")[..140] + "..." : item.Description)</p>
             </div>
-            <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
-                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Details</a>
+            <div class="card-footer pt-3 pb-3 px-3">
+                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-ink">Details</a>
             </div>
         </div>
     </div>
@@ -96,5 +106,5 @@
 
 @if (!Model.Events.Any())
 {
-    <div class="alert alert-info mt-3">No events matched your criteria.</div>
+    <div class="alert alert-secondary border-dark-subtle mt-3">No events matched your criteria.</div>
 }

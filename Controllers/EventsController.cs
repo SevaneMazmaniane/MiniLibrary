@@ -307,7 +307,8 @@ public class EventsController : Controller
             return RedirectToAction(nameof(Details), new { id = model.EventId });
         }
 
-        var invitee = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var invitee = await _context.Users
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == email.ToUpperInvariant());
 
         _context.EventInvitations.Add(new EventInvitation
         {
@@ -328,21 +329,57 @@ public class EventsController : Controller
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var email = User.FindFirstValue(ClaimTypes.Email);
+        var emailLower = string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToLower();
+        var isAdmin = User.IsInRole("Admin");
 
-        var invitations = await _context.EventInvitations
-            .Include(i => i.EventItem)
-            .Where(i => i.InviteeUserId == userId || (email != null && i.InviteeEmail == email))
-            .OrderBy(i => i.EventItem!.StartAtUtc)
-            .Select(i => new EventInvitationListItem
-            {
-                InvitationId = i.Id,
-                EventTitle = i.EventItem!.Title,
-                StartAtUtc = i.EventItem.StartAtUtc,
-                Location = i.EventItem.Location,
-                Status = i.Status
-            })
-            .ToListAsync();
+        List<EventInvitationListItem> invitations;
 
+        if (isAdmin)
+        {
+            invitations = await _context.EventInvitations
+                .AsNoTracking()
+                .Include(i => i.EventItem)
+                .Include(i => i.InviteeUser)
+                .Where(i => i.InviterId == userId)
+                .OrderByDescending(i => i.SentAtUtc)
+                .Select(i => new EventInvitationListItem
+                {
+                    InvitationId = i.Id,
+                    EventTitle = i.EventItem!.Title,
+                    StartAtUtc = i.EventItem.StartAtUtc,
+                    Location = i.EventItem.Location,
+                    Status = i.Status,
+                    InviteeEmail = i.InviteeUser != null ? (i.InviteeUser.Email ?? i.InviteeEmail) : i.InviteeEmail,
+                    SentAtUtc = i.SentAtUtc,
+                    RespondedAtUtc = i.RespondedAtUtc,
+                    CanRespond = false
+                })
+                .ToListAsync();
+        }
+        else
+        {
+            invitations = await _context.EventInvitations
+                .AsNoTracking()
+                .Include(i => i.EventItem)
+                .Include(i => i.Inviter)
+                .Where(i => i.InviteeUserId == userId || (emailLower != null && i.InviteeEmail.ToLower() == emailLower))
+                .OrderBy(i => i.EventItem!.StartAtUtc)
+                .Select(i => new EventInvitationListItem
+                {
+                    InvitationId = i.Id,
+                    EventTitle = i.EventItem!.Title,
+                    StartAtUtc = i.EventItem.StartAtUtc,
+                    Location = i.EventItem.Location,
+                    Status = i.Status,
+                    InviterEmail = i.Inviter != null ? (i.Inviter.Email ?? i.Inviter.UserName) : null,
+                    SentAtUtc = i.SentAtUtc,
+                    RespondedAtUtc = i.RespondedAtUtc,
+                    CanRespond = true
+                })
+                .ToListAsync();
+        }
+
+        ViewBag.IsAdmin = isAdmin;
         return View(invitations);
     }
 
@@ -352,6 +389,7 @@ public class EventsController : Controller
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var email = User.FindFirstValue(ClaimTypes.Email);
+        var emailLower = string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToLower();
 
         var invitation = await _context.EventInvitations
             .Include(i => i.EventItem)
@@ -362,7 +400,9 @@ public class EventsController : Controller
             return NotFound();
         }
 
-        if (invitation.InviteeUserId != userId && (email is null || invitation.InviteeEmail != email))
+        var invitationEmailLower = invitation.InviteeEmail.Trim().ToLower();
+        var matchesEmail = emailLower is not null && invitationEmailLower == emailLower;
+        if (invitation.InviteeUserId != userId && !matchesEmail)
         {
             return Forbid();
         }

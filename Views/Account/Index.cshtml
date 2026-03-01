@@ -1,0 +1,93 @@
+@model AccountDashboardViewModel
+@{
+    ViewData["Title"] = "My Account";
+    var name = string.IsNullOrWhiteSpace(Model.DisplayName) ? Model.Email : Model.DisplayName;
+}
+
+<div class="hero-panel mb-4">
+    <p class="ancient-subtitle mb-2">Personal Archive</p>
+    <h1 class="h2 mb-2">Welcome, @name</h1>
+    <p class="mb-0 text-light-emphasis">Track your reading journey and the events you have attended.</p>
+</div>
+
+@if (Model.IsAdmin)
+{
+    <div class="alert alert-secondary border-dark-subtle mb-4">
+        You are signed in as an admin. This page shows your personal borrowing and attended-event history.
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="pillar-card p-4 h-100">
+            <h2 class="h4 mb-3">Borrowed Books</h2>
+
+            @if (Model.BorrowedBooks.Any())
+            {
+                <div class="table-scroll">
+                    <table class="table table-modern align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Borrowed</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var loan in Model.BorrowedBooks)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@loan.Title</td>
+                                <td>@loan.Author</td>
+                                <td>@loan.BorrowedAtUtc.ToLocalTime().ToString("g")</td>
+                                <td>
+                                    @if (loan.ReturnedAtUtc is null)
+                                    {
+                                        <span class="badge text-bg-dark">Active loan</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge mono-badge">Returned @loan.ReturnedAtUtc.Value.ToLocalTime().ToString("d")</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-secondary mb-0">No borrowed books yet. Visit the Books page to begin your reading list.</p>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="pillar-card p-4 h-100">
+            <h2 class="h4 mb-3">Events Attended</h2>
+
+            @if (Model.AttendedEvents.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var e in Model.AttendedEvents)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-start px-0 bg-transparent border-secondary-subtle">
+                            <div>
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId" class="fw-semibold link-dark text-decoration-none">@e.Title</a>
+                                <div class="small text-secondary">@e.Location</div>
+                                <div class="small text-secondary">@e.StartAtUtc.ToLocalTime().ToString("f")</div>
+                            </div>
+                            <span class="badge mono-badge ms-2">@e.Category</span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-secondary mb-0">No attended events yet. RSVP to events, then they will appear here once the event date passes.</p>
+            }
+        </div>
+    </div>
+</div>

@@ -36,12 +36,12 @@
                 <span asp-validation-for="Input.ConfirmPassword" class="field-error"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Create account</button>
+            <button type="submit" class="btn btn-ink w-100 auth-submit">Create account</button>
         </form>
 
         <p class="auth-footnote mt-3 mb-0 text-center">
             Already have an account?
-            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
+            <a class="auth-link" asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
         </p>
     </div>
 </section>

@@ -57,4 +57,9 @@ public class EventInvitationListItem
     public DateTime StartAtUtc { get; set; }
     public string Location { get; set; } = string.Empty;
     public EventParticipationStatus Status { get; set; }
+    public string? InviterEmail { get; set; }
+    public string? InviteeEmail { get; set; }
+    public DateTime SentAtUtc { get; set; }
+    public DateTime? RespondedAtUtc { get; set; }
+    public bool CanRespond { get; set; }
 }
