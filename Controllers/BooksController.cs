@@ -229,14 +229,14 @@ public class BooksController : Controller
 
         var trimmedTitle = title.Trim();
         var trimmedAuthor = string.IsNullOrWhiteSpace(author) ? null : author.Trim();
-        var prompt = $"""
-            Return only valid minified JSON using this schema:
-            {"title":"string","author":"string","genre":"string|null","isbn":"string|null"}
+        var prompt = $@"
+Return only valid minified JSON using this schema:
+{{""title"":""string"",""author"":""string"",""genre"":""string|null"",""isbn"":""string|null""}}
 
-            Fill the best known values for this book. Use null when unknown.
-            Title: {trimmedTitle}
-            Author hint: {trimmedAuthor ?? "unknown"}
-            """;
+Fill the best known values for this book. Use null when unknown.
+Title: {trimmedTitle}
+Author hint: {trimmedAuthor ?? "unknown"}
+";
 
         var aiResponse = await _geminiService.GenerateBookInsightsAsync(prompt);
         if (!TryParseAiBookSuggestion(aiResponse, out var suggestion))
