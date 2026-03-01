@@ -165,13 +165,15 @@ pre {
     border: 1px solid var(--stone-300);
     background: transparent;
 }
-
-.btn-outline-ink:hover,
-.btn-outline-ink:focus {
-    color: var(--white);
-    background: var(--ink-700);
-    border-color: var(--ink-700);
-}
+    .btn-outline-ink.black {
+        color: var(--white);
+    }
+    .btn-outline-ink:hover,
+    .btn-outline-ink:focus {
+        color: var(--white);
+        background: var(--ink-700);
+        border-color: var(--ink-700);
+    }
 
 .filter-panel {
     border: 1px solid var(--stone-200);
