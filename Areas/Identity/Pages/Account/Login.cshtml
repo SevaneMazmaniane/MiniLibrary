@@ -29,12 +29,12 @@
                 <label asp-for="Input.RememberMe" class="form-check-label"></label>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <button type="submit" class="btn btn-ink w-100 auth-submit">Login</button>
         </form>
 
         <p class="auth-footnote mt-3 mb-0 text-center">
             New to MiniLibrary?
-            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
+            <a class="auth-link" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
         </p>
     </div>
 </section>

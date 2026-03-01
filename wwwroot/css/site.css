@@ -223,3 +223,67 @@ pre {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(8px);
 }
+
+
+a {
+    color: #3a3c44;
+}
+
+a:hover,
+a:focus {
+    color: #191a1e;
+}
+
+.btn-primary {
+    background: linear-gradient(130deg, #101012, #2a2b31);
+    color: var(--white);
+    border: 1px solid #363942;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    color: var(--white);
+    background: linear-gradient(130deg, #1d1e22, #34363e);
+    border-color: #3d4049;
+}
+
+.btn-outline-primary {
+    color: var(--ink-800);
+    border: 1px solid var(--stone-300);
+    background: transparent;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    color: var(--white);
+    background: var(--ink-700);
+    border-color: var(--ink-700);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: #8c909a;
+    box-shadow: 0 0 0 0.25rem rgba(55, 58, 66, 0.2);
+}
+
+.auth-submit,
+.auth-submit:hover,
+.auth-submit:focus,
+.library-nav .btn-ink,
+.library-nav .btn-ink:hover,
+.library-nav .btn-ink:focus {
+    color: var(--white) !important;
+}
+
+.auth-link {
+    color: #2f3239;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-link:hover,
+.auth-link:focus {
+    color: #0f1013;
+    text-decoration: underline;
+}
