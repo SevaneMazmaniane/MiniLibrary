@@ -1,15 +1,7 @@
-body { font-family: Arial, sans-serif; margin: 0; background: #f8f9fb; }
-.container { max-width: 1100px; margin: 1rem auto; background: white; padding: 1rem; border-radius: 8px; }
-.nav { display: flex; gap: 1rem; padding: 1rem; background: #1f2937; }
-.nav a, .nav button { color: white; text-decoration: none; background: none; border: none; cursor: pointer; }
-.search-row { display: flex; gap: .5rem; margin-bottom: 1rem; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border: 1px solid #ddd; padding: .5rem; }
-.alert { padding: .75rem; margin-bottom: 1rem; border-radius: 6px; }
-.alert.error { background: #fee2e2; }
-.alert.ai { background: #e0f2fe; }
+body { font-family: Inter, "Segoe UI", Arial, sans-serif; margin: 0; background: #f8f9fb; }
 pre { white-space: pre-wrap; }
-form { margin: .2rem 0; }
-label { display: block; margin: .3rem 0; }
-input, textarea, select { width: 100%; max-width: 500px; padding: .4rem; }
-button { padding: .35rem .7rem; }
+
+.auth-card { max-width: 540px; margin: 2rem auto; border-radius: 12px; }
+.auth-subtitle { color: #6b7280; }
+.field-error { color: #b91c1c; font-size: .88rem; display: block; margin-top: .25rem; }
+.auth-footnote { color: #6b7280; }

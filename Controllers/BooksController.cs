@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -43,8 +44,18 @@ public class BooksController : Controller
         {
             Search = search,
             Genre = genre,
-            Books = await query.OrderBy(b => b.Title).ToListAsync()
+            Books = await query.OrderBy(b => b.Title).ToListAsync(),
+            AiInput = new AiBookDraftInput()
         };
+
+        var aiCandidateJson = TempData["AiBookCandidate"] as string;
+        if (!string.IsNullOrWhiteSpace(aiCandidateJson))
+        {
+            model.AiCandidate = JsonSerializer.Deserialize<AiBookCandidate>(aiCandidateJson);
+        }
+
+        model.AiInput.Title = TempData["AiDraftTitle"] as string;
+        model.AiInput.Author = TempData["AiDraftAuthor"] as string;
 
         ViewBag.Genres = await _context.Books
             .Where(x => x.Genre != null)
@@ -54,6 +65,78 @@ public class BooksController : Controller
             .ToListAsync();
 
         return View(model);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddWithAi(AiBookDraftInput input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Title))
+        {
+            TempData["Error"] = "Book title is required for AI suggestion.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var prompt = $"""
+                      Generate a single library book suggestion from this input.
+                      Input title: {input.Title}
+                      Input author (optional): {input.Author}
+
+                      Return ONLY valid JSON in this exact shape with no markdown:
+                      {
+                        \"title\": \"string\",
+                        \"author\": \"string\",
+                        \"genre\": \"string\",
+                        \"isbn\": \"string\"
+                      }
+
+                      Rules:
+                      - If author is unknown, infer the most likely author or set to \"Unknown\".
+                      - Genre should be concise.
+                      - ISBN can be empty string if unavailable.
+                      """;
+
+        var aiText = await _geminiService.GenerateBookInsightsAsync(prompt);
+        var candidate = ParseAiBookCandidate(aiText);
+        if (candidate is null)
+        {
+            TempData["Error"] = "AI response could not be parsed. Please try again.";
+            TempData["AiDraftTitle"] = input.Title;
+            TempData["AiDraftAuthor"] = input.Author;
+            return RedirectToAction(nameof(Index));
+        }
+
+        TempData["AiBookCandidate"] = JsonSerializer.Serialize(candidate);
+        TempData["AiDraftTitle"] = input.Title;
+        TempData["AiDraftAuthor"] = input.Author;
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmAddWithAi(AiBookCandidate candidate)
+    {
+        if (string.IsNullOrWhiteSpace(candidate.Title) || string.IsNullOrWhiteSpace(candidate.Author))
+        {
+            TempData["Error"] = "AI candidate must include title and author.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var book = new Book
+        {
+            Title = candidate.Title.Trim(),
+            Author = candidate.Author.Trim(),
+            Genre = string.IsNullOrWhiteSpace(candidate.Genre) ? null : candidate.Genre.Trim(),
+            Isbn = string.IsNullOrWhiteSpace(candidate.Isbn) ? null : candidate.Isbn.Trim(),
+            TotalCopies = 1,
+            AvailableCopies = 1
+        };
+
+        _context.Books.Add(book);
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
     }
 
     [Authorize(Roles = "Admin")]
@@ -213,5 +296,59 @@ public class BooksController : Controller
         TempData["AiInsights"] = insights;
         TempData["AiInsightsBook"] = book.Title;
         return RedirectToAction(nameof(Index));
+    }
+
+    private static AiBookCandidate? ParseAiBookCandidate(string aiText)
+    {
+        if (string.IsNullOrWhiteSpace(aiText))
+        {
+            return null;
+        }
+
+        var json = ExtractJsonObject(aiText);
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var title = root.TryGetProperty("title", out var titleEl) ? titleEl.GetString() : null;
+            var author = root.TryGetProperty("author", out var authorEl) ? authorEl.GetString() : null;
+            var genre = root.TryGetProperty("genre", out var genreEl) ? genreEl.GetString() : null;
+            var isbn = root.TryGetProperty("isbn", out var isbnEl) ? isbnEl.GetString() : null;
+
+            if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(author))
+            {
+                return null;
+            }
+
+            return new AiBookCandidate
+            {
+                Title = title.Trim(),
+                Author = author.Trim(),
+                Genre = string.IsNullOrWhiteSpace(genre) ? null : genre.Trim(),
+                Isbn = string.IsNullOrWhiteSpace(isbn) ? null : isbn.Trim()
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? ExtractJsonObject(string text)
+    {
+        var start = text.IndexOf('{');
+        var end = text.LastIndexOf('}');
+        if (start < 0 || end <= start)
+        {
+            return null;
+        }
+
+        return text[start..(end + 1)];
     }
 }

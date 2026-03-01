@@ -1,0 +1,40 @@
+@page
+@model MiniLibrary.Areas.Identity.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<section class="auth-card card shadow-sm border-0">
+    <div class="card-body p-4">
+        <h1 class="h3 mb-2">Welcome back</h1>
+        <p class="auth-subtitle mb-4">Sign in to manage your books and reading lists.</p>
+
+        <form method="post" class="auth-form">
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" autocomplete="username" class="form-control" />
+                <span asp-validation-for="Input.Email" class="field-error"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label"></label>
+                <input asp-for="Input.Password" autocomplete="current-password" class="form-control" />
+                <span asp-validation-for="Input.Password" class="field-error"></span>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="Input.RememberMe" class="form-check-input" />
+                <label asp-for="Input.RememberMe" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+
+        <p class="auth-footnote mt-3 mb-0 text-center">
+            New to MiniLibrary?
+            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
+        </p>
+    </div>
+</section>
