@@ -51,7 +51,14 @@ public class BooksController : Controller
         var aiCandidateJson = TempData["AiBookCandidate"] as string;
         if (!string.IsNullOrWhiteSpace(aiCandidateJson))
         {
-            model.AiCandidate = JsonSerializer.Deserialize<AiBookCandidate>(aiCandidateJson);
+            try
+            {
+                model.AiCandidate = JsonSerializer.Deserialize<AiBookCandidate>(aiCandidateJson);
+            }
+            catch
+            {
+                TempData["Error"] = "AI suggestion data was invalid. Please try Add with AI again.";
+            }
         }
 
         model.AiInput.Title = TempData["AiDraftTitle"] as string;
