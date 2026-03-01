@@ -10,6 +10,10 @@ public class EventSearchViewModel
     public DateTime? EndDate { get; set; }
     public EventCategory? Category { get; set; }
     public List<EventItem> Events { get; set; } = [];
+
+    public List<EventItem> RecommendedEvents { get; set; } = [];
+    public string? RecommendationReason { get; set; }
+    public bool HasBorrowedBooksForRecommendations { get; set; }
 }
 
 public class EventFormViewModel
