@@ -4,34 +4,44 @@
     ViewData["Title"] = "Register";
 }
 
-<section class="auth-card">
-    <h1>Create your account</h1>
-    <p class="auth-subtitle">Join MiniLibrary to track and organize your collection.</p>
+<section class="auth-card card shadow-sm border-0">
+    <div class="card-body p-4">
+        <h1 class="h3 mb-2">Create your account</h1>
+        <p class="auth-subtitle mb-4">Join MiniLibrary to track and organize your collection.</p>
 
-    <form method="post" class="auth-form">
-        <div asp-validation-summary="ModelOnly" class="alert error"></div>
+        <form method="post" class="auth-form">
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
 
-        <label asp-for="Input.DisplayName"></label>
-        <input asp-for="Input.DisplayName" autocomplete="name" />
-        <span asp-validation-for="Input.DisplayName" class="field-error"></span>
+            <div class="mb-3">
+                <label asp-for="Input.DisplayName" class="form-label"></label>
+                <input asp-for="Input.DisplayName" autocomplete="name" class="form-control" />
+                <span asp-validation-for="Input.DisplayName" class="field-error"></span>
+            </div>
 
-        <label asp-for="Input.Email"></label>
-        <input asp-for="Input.Email" autocomplete="username" />
-        <span asp-validation-for="Input.Email" class="field-error"></span>
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" autocomplete="username" class="form-control" />
+                <span asp-validation-for="Input.Email" class="field-error"></span>
+            </div>
 
-        <label asp-for="Input.Password"></label>
-        <input asp-for="Input.Password" autocomplete="new-password" />
-        <span asp-validation-for="Input.Password" class="field-error"></span>
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label"></label>
+                <input asp-for="Input.Password" autocomplete="new-password" class="form-control" />
+                <span asp-validation-for="Input.Password" class="field-error"></span>
+            </div>
 
-        <label asp-for="Input.ConfirmPassword"></label>
-        <input asp-for="Input.ConfirmPassword" autocomplete="new-password" />
-        <span asp-validation-for="Input.ConfirmPassword" class="field-error"></span>
+            <div class="mb-3">
+                <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                <input asp-for="Input.ConfirmPassword" autocomplete="new-password" class="form-control" />
+                <span asp-validation-for="Input.ConfirmPassword" class="field-error"></span>
+            </div>
 
-        <button type="submit">Create account</button>
-    </form>
+            <button type="submit" class="btn btn-primary w-100">Create account</button>
+        </form>
 
-    <p class="auth-footnote">
-        Already have an account?
-        <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
-    </p>
+        <p class="auth-footnote mt-3 mb-0 text-center">
+            Already have an account?
+            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
+        </p>
+    </div>
 </section>
