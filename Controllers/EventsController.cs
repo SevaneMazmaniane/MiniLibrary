@@ -59,6 +59,7 @@ public class EventsController : Controller
         return View(filter);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         var model = new EventFormViewModel();
@@ -67,6 +68,7 @@ public class EventsController : Controller
         if (TempData["AiEventLocation"] is string location) model.Location = location;
         if (TempData["AiEventCategory"] is string category && Enum.TryParse<EventCategory>(category, out var parsedCategory)) model.Category = parsedCategory;
         if (TempData["AiEventStartAtUtc"] is string startRaw && DateTime.TryParse(startRaw, out var parsedStart)) model.StartAtUtc = parsedStart;
+        if (TempData["AiEventEndAtUtc"] is string endRaw && DateTime.TryParse(endRaw, out var parsedEnd)) model.EndAtUtc = parsedEnd;
         if (TempData["AiEventDescription"] is string description)
         {
             TempData.Keep("AiEventDescription");
@@ -78,6 +80,7 @@ public class EventsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(EventFormViewModel model)
     {
         if (model.EndAtUtc.HasValue && model.EndAtUtc < model.StartAtUtc)
@@ -111,19 +114,15 @@ public class EventsController : Controller
         return RedirectToAction(nameof(Details), new { id = item.Id });
     }
 
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var item = await _context.EventItems.FirstOrDefaultAsync(e => e.Id == id);
         if (item is null)
         {
             return NotFound();
         }
 
-        if (item.OrganizerId != userId && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
 
         var model = new EventFormViewModel
         {
@@ -135,11 +134,23 @@ public class EventsController : Controller
             Description = item.Description,
             Category = item.Category
         };
+
+        if (TempData["AiEventId"] is string idRaw && int.TryParse(idRaw, out var eventId) && eventId == id)
+        {
+            if (TempData["AiEventTitle"] is string title) model.Title = title;
+            if (TempData["AiEventLocation"] is string location) model.Location = location;
+            if (TempData["AiEventCategory"] is string category && Enum.TryParse<EventCategory>(category, out var parsedCategory)) model.Category = parsedCategory;
+            if (TempData["AiEventStartAtUtc"] is string startRaw && DateTime.TryParse(startRaw, out var parsedStart)) model.StartAtUtc = parsedStart;
+            if (TempData["AiEventEndAtUtc"] is string endRaw && DateTime.TryParse(endRaw, out var parsedEnd)) model.EndAtUtc = parsedEnd;
+            if (TempData["AiEventDescription"] is string description) model.Description = description;
+        }
+
         return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id, EventFormViewModel model)
     {
         if (id != model.Id)
@@ -147,17 +158,12 @@ public class EventsController : Controller
             return BadRequest();
         }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var item = await _context.EventItems.FirstOrDefaultAsync(e => e.Id == id);
         if (item is null)
         {
             return NotFound();
         }
 
-        if (item.OrganizerId != userId && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
 
         if (model.EndAtUtc.HasValue && model.EndAtUtc < model.StartAtUtc)
         {
@@ -183,19 +189,15 @@ public class EventsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var item = await _context.EventItems.FirstOrDefaultAsync(e => e.Id == id);
         if (item is null)
         {
             return NotFound();
         }
 
-        if (item.OrganizerId != userId && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
 
         _context.EventItems.Remove(item);
         await _context.SaveChangesAsync();
@@ -274,6 +276,7 @@ public class EventsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Invite(InvitationViewModel model)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -283,10 +286,6 @@ public class EventsController : Controller
             return NotFound();
         }
 
-        if (eventItem.OrganizerId != userId && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
 
         if (!ModelState.IsValid)
         {
@@ -392,8 +391,54 @@ public class EventsController : Controller
         return RedirectToAction(nameof(Invitations));
     }
 
+
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AiEnhanceDescription(EventFormViewModel model, string returnAction)
+    {
+        if (string.IsNullOrWhiteSpace(model.Description))
+        {
+            TempData["Error"] = "Please enter a description before using AI enhancement.";
+            return RedirectToForm(returnAction, model.Id);
+        }
+
+        var prompt = $"""
+You are an assistant for a mini library cultural events app.
+Rephrase the following event description so it sounds polished, inviting, and clear.
+Keep it concise (max 140 words) and preserve original meaning.
+Return only plain text.
+
+Description:
+{model.Description}
+""";
+
+        var aiText = await _geminiService.GenerateBookInsightsAsync(prompt);
+
+        TempData["AiEventDescription"] = aiText;
+        TempData["AiEventTitle"] = model.Title;
+        TempData["AiEventLocation"] = model.Location;
+        TempData["AiEventStartAtUtc"] = model.StartAtUtc.ToString("O");
+        TempData["AiEventEndAtUtc"] = model.EndAtUtc?.ToString("O");
+        TempData["AiEventCategory"] = model.Category.ToString();
+        TempData["AiEventId"] = model.Id?.ToString();
+
+        return RedirectToForm(returnAction, model.Id);
+    }
+
+    private IActionResult RedirectToForm(string returnAction, int? id)
+    {
+        if (string.Equals(returnAction, nameof(Edit), StringComparison.OrdinalIgnoreCase) && id.HasValue)
+        {
+            return RedirectToAction(nameof(Edit), new { id = id.Value });
+        }
+
+        return RedirectToAction(nameof(Create));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AiDraftDescription(EventFormViewModel model)
     {
         if (string.IsNullOrWhiteSpace(model.Title) || string.IsNullOrWhiteSpace(model.Location))
@@ -417,7 +462,9 @@ Return only plain text.
         TempData["AiEventLocation"] = model.Location;
         TempData["AiEventStartAtUtc"] = model.StartAtUtc.ToString("O");
         TempData["AiEventCategory"] = model.Category.ToString();
+        TempData["AiEventEndAtUtc"] = model.EndAtUtc?.ToString("O");
+        TempData["AiEventId"] = model.Id?.ToString();
 
-        return RedirectToAction(nameof(Create));
+        return RedirectToForm(nameof(Create), model.Id);
     }
 }

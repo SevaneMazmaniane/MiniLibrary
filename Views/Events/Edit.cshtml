@@ -5,6 +5,20 @@
 
 <h1 class="h3 mb-3">Edit Event</h1>
 
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (TempData["AiEventDescription"] is string aiDescription)
+{
+    <div class="alert alert-success">
+        <strong>AI Enhanced Description:</strong>
+        <p class="mb-0 mt-2">@aiDescription</p>
+    </div>
+}
+
+
 <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
     <input asp-for="Id" type="hidden" />
     <partial name="_EventForm" model="Model" />
