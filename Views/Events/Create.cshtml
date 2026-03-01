@@ -1,0 +1,56 @@
+@model MiniLibrary.Models.EventFormViewModel
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<h1 class="h3 mb-3">Create Book/Art Event</h1>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (TempData["AiEventDescription"] is string aiDescription)
+{
+    <div class="alert alert-success">
+        <strong>AI Draft:</strong>
+        <p class="mb-0 mt-2">@aiDescription</p>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <form asp-action="Create" method="post">
+            <partial name="_EventForm" model="Model" />
+            <button class="btn btn-primary" type="submit">Save Event</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-info">
+            <div class="card-body">
+                <h2 class="h6">AI Assistant</h2>
+                <p class="small text-muted">Generate a short, engaging event description.</p>
+                <form asp-action="AiDraftDescription" method="post">
+                    <div class="mb-2">
+                        <label asp-for="Title" class="form-label small"></label>
+                        <input asp-for="Title" class="form-control form-control-sm" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Location" class="form-label small"></label>
+                        <input asp-for="Location" class="form-control form-control-sm" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="StartAtUtc" class="form-label small"></label>
+                        <input asp-for="StartAtUtc" class="form-control form-control-sm" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label small"></label>
+                        <select asp-for="Category" asp-items="Html.GetEnumSelectList<MiniLibrary.Models.EventCategory>()" class="form-select form-select-sm"></select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-info">Generate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

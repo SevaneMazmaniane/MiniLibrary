@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiniLibrary.Data;
 
 #nullable disable
@@ -17,322 +16,101 @@ namespace MiniLibrary.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex");
-
-                    b.ToTable("AspNetRoles", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
-                {
-                    b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("LoginProvider", "ProviderKey");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserLogins", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("RoleId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("UserId", "LoginProvider", "Name");
-
-                    b.ToTable("AspNetUserTokens", (string)null);
-                });
-
             modelBuilder.Entity("MiniLibrary.Models.ApplicationUser", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DisplayName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
+                    b.Property<string>("Id").HasColumnType("TEXT");
+                    b.Property<int>("AccessFailedCount").HasColumnType("INTEGER");
+                    b.Property<string>("ConcurrencyStamp").IsConcurrencyToken().HasColumnType("TEXT");
+                    b.Property<string>("DisplayName").HasColumnType("TEXT");
+                    b.Property<string>("Email").HasMaxLength(256).HasColumnType("TEXT");
+                    b.Property<bool>("EmailConfirmed").HasColumnType("INTEGER");
+                    b.Property<bool>("LockoutEnabled").HasColumnType("INTEGER");
+                    b.Property<DateTimeOffset?>("LockoutEnd").HasColumnType("TEXT");
+                    b.Property<string>("NormalizedEmail").HasMaxLength(256).HasColumnType("TEXT");
+                    b.Property<string>("NormalizedUserName").HasMaxLength(256).HasColumnType("TEXT");
+                    b.Property<string>("PasswordHash").HasColumnType("TEXT");
+                    b.Property<string>("PhoneNumber").HasColumnType("TEXT");
+                    b.Property<bool>("PhoneNumberConfirmed").HasColumnType("INTEGER");
+                    b.Property<string>("SecurityStamp").HasColumnType("TEXT");
+                    b.Property<bool>("TwoFactorEnabled").HasColumnType("INTEGER");
+                    b.Property<string>("UserName").HasMaxLength(256).HasColumnType("TEXT");
                     b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex");
-
+                    b.HasIndex("NormalizedEmail").HasDatabaseName("EmailIndex");
+                    b.HasIndex("NormalizedUserName").IsUnique().HasDatabaseName("UserNameIndex");
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("MiniLibrary.Models.Book", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Author")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("AvailableCopies")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Genre")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Isbn")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TotalCopies")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("Year")
-                        .HasColumnType("INTEGER");
-
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<string>("Author").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
+                    b.Property<int>("AvailableCopies").HasColumnType("INTEGER");
+                    b.Property<string>("Description").HasMaxLength(2000).HasColumnType("TEXT");
+                    b.Property<string>("Genre").HasMaxLength(100).HasColumnType("TEXT");
+                    b.Property<string>("Isbn").HasMaxLength(50).HasColumnType("TEXT");
+                    b.Property<string>("Title").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
+                    b.Property<int>("TotalCopies").HasColumnType("INTEGER");
+                    b.Property<int?>("Year").HasColumnType("INTEGER");
                     b.HasKey("Id");
-
                     b.ToTable("Books");
                 });
 
             modelBuilder.Entity("MiniLibrary.Models.BookLoan", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BookId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("BorrowedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ReturnedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<int>("BookId").HasColumnType("INTEGER");
+                    b.Property<DateTime>("BorrowedAtUtc").HasColumnType("TEXT");
+                    b.Property<DateTime?>("ReturnedAtUtc").HasColumnType("TEXT");
+                    b.Property<string>("UserId").IsRequired().HasColumnType("TEXT");
                     b.HasKey("Id");
-
                     b.HasIndex("BookId");
-
                     b.ToTable("BookLoans");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("MiniLibrary.Models.EventAttendance", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<int>("EventItemId").HasColumnType("INTEGER");
+                    b.Property<int>("Status").HasColumnType("INTEGER");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("TEXT");
+                    b.Property<string>("UserId").IsRequired().HasColumnType("TEXT");
+                    b.HasKey("Id");
+                    b.HasIndex("EventItemId", "UserId").IsUnique();
+                    b.HasIndex("UserId");
+                    b.ToTable("EventAttendances");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("MiniLibrary.Models.EventInvitation", b =>
                 {
-                    b.HasOne("MiniLibrary.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<int>("EventItemId").HasColumnType("INTEGER");
+                    b.Property<string>("InviteeEmail").IsRequired().HasMaxLength(256).HasColumnType("TEXT");
+                    b.Property<string>("InviteeUserId").HasColumnType("TEXT");
+                    b.Property<string>("InviterId").IsRequired().HasColumnType("TEXT");
+                    b.Property<DateTime?>("RespondedAtUtc").HasColumnType("TEXT");
+                    b.Property<DateTime>("SentAtUtc").HasColumnType("TEXT");
+                    b.Property<int>("Status").HasColumnType("INTEGER");
+                    b.HasKey("Id");
+                    b.HasIndex("EventItemId", "InviteeEmail").IsUnique();
+                    b.HasIndex("InviteeUserId");
+                    b.HasIndex("InviterId");
+                    b.ToTable("EventInvitations");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("MiniLibrary.Models.EventItem", b =>
                 {
-                    b.HasOne("MiniLibrary.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MiniLibrary.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.HasOne("MiniLibrary.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<int>("Category").HasColumnType("INTEGER");
+                    b.Property<DateTime>("CreatedAtUtc").HasColumnType("TEXT");
+                    b.Property<string>("Description").HasMaxLength(4000).HasColumnType("TEXT");
+                    b.Property<DateTime?>("EndAtUtc").HasColumnType("TEXT");
+                    b.Property<string>("Location").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
+                    b.Property<string>("OrganizerId").IsRequired().HasColumnType("TEXT");
+                    b.Property<DateTime>("StartAtUtc").HasColumnType("TEXT");
+                    b.Property<string>("Title").IsRequired().HasMaxLength(200).HasColumnType("TEXT");
+                    b.HasKey("Id");
+                    b.HasIndex("OrganizerId");
+                    b.ToTable("EventItems");
                 });
 
             modelBuilder.Entity("MiniLibrary.Models.BookLoan", b =>
@@ -346,9 +124,68 @@ namespace MiniLibrary.Migrations
                     b.Navigation("Book");
                 });
 
+            modelBuilder.Entity("MiniLibrary.Models.EventAttendance", b =>
+                {
+                    b.HasOne("MiniLibrary.Models.EventItem", "EventItem")
+                        .WithMany("Attendees")
+                        .HasForeignKey("EventItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MiniLibrary.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EventItem");
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MiniLibrary.Models.EventInvitation", b =>
+                {
+                    b.HasOne("MiniLibrary.Models.EventItem", "EventItem")
+                        .WithMany("Invitations")
+                        .HasForeignKey("EventItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MiniLibrary.Models.ApplicationUser", "InviteeUser")
+                        .WithMany()
+                        .HasForeignKey("InviteeUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MiniLibrary.Models.ApplicationUser", "Inviter")
+                        .WithMany()
+                        .HasForeignKey("InviterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EventItem");
+                    b.Navigation("InviteeUser");
+                    b.Navigation("Inviter");
+                });
+
+            modelBuilder.Entity("MiniLibrary.Models.EventItem", b =>
+                {
+                    b.HasOne("MiniLibrary.Models.ApplicationUser", "Organizer")
+                        .WithMany()
+                        .HasForeignKey("OrganizerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Organizer");
+                });
+
             modelBuilder.Entity("MiniLibrary.Models.Book", b =>
                 {
                     b.Navigation("Loans");
+                });
+
+            modelBuilder.Entity("MiniLibrary.Models.EventItem", b =>
+                {
+                    b.Navigation("Attendees");
+                    b.Navigation("Invitations");
                 });
 #pragma warning restore 612, 618
         }

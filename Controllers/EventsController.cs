@@ -1,0 +1,423 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MiniLibrary.Data;
+using MiniLibrary.Models;
+using MiniLibrary.Services;
+
+namespace MiniLibrary.Controllers;
+
+[Authorize]
+public class EventsController : Controller
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IGeminiService _geminiService;
+
+    public EventsController(ApplicationDbContext context, IGeminiService geminiService)
+    {
+        _context = context;
+        _geminiService = geminiService;
+    }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Index(EventSearchViewModel filter)
+    {
+        var query = _context.EventItems
+            .Include(e => e.Organizer)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        {
+            var term = filter.SearchTerm.Trim().ToLower();
+            query = query.Where(e => e.Title.ToLower().Contains(term) || (e.Description != null && e.Description.ToLower().Contains(term)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Location))
+        {
+            var location = filter.Location.Trim().ToLower();
+            query = query.Where(e => e.Location.ToLower().Contains(location));
+        }
+
+        if (filter.StartDate.HasValue)
+        {
+            query = query.Where(e => e.StartAtUtc >= filter.StartDate.Value);
+        }
+
+        if (filter.EndDate.HasValue)
+        {
+            var end = filter.EndDate.Value.AddDays(1);
+            query = query.Where(e => e.StartAtUtc < end);
+        }
+
+        if (filter.Category.HasValue)
+        {
+            query = query.Where(e => e.Category == filter.Category.Value);
+        }
+
+        filter.Events = await query.OrderBy(e => e.StartAtUtc).ToListAsync();
+        return View(filter);
+    }
+
+    public IActionResult Create()
+    {
+        var model = new EventFormViewModel();
+
+        if (TempData["AiEventTitle"] is string title) model.Title = title;
+        if (TempData["AiEventLocation"] is string location) model.Location = location;
+        if (TempData["AiEventCategory"] is string category && Enum.TryParse<EventCategory>(category, out var parsedCategory)) model.Category = parsedCategory;
+        if (TempData["AiEventStartAtUtc"] is string startRaw && DateTime.TryParse(startRaw, out var parsedStart)) model.StartAtUtc = parsedStart;
+        if (TempData["AiEventDescription"] is string description)
+        {
+            TempData.Keep("AiEventDescription");
+            model.Description = description;
+        }
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(EventFormViewModel model)
+    {
+        if (model.EndAtUtc.HasValue && model.EndAtUtc < model.StartAtUtc)
+        {
+            ModelState.AddModelError(nameof(model.EndAtUtc), "End time must be after start time.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var item = new EventItem
+        {
+            Title = model.Title.Trim(),
+            StartAtUtc = model.StartAtUtc,
+            EndAtUtc = model.EndAtUtc,
+            Location = model.Location.Trim(),
+            Description = model.Description,
+            Category = model.Category,
+            OrganizerId = userId,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+        _context.EventItems.Add(item);
+        await _context.SaveChangesAsync();
+
+        TempData["Message"] = "Event created.";
+        return RedirectToAction(nameof(Details), new { id = item.Id });
+    }
+
+    public async Task<IActionResult> Edit(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var item = await _context.EventItems.FirstOrDefaultAsync(e => e.Id == id);
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        if (item.OrganizerId != userId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        var model = new EventFormViewModel
+        {
+            Id = item.Id,
+            Title = item.Title,
+            StartAtUtc = item.StartAtUtc,
+            EndAtUtc = item.EndAtUtc,
+            Location = item.Location,
+            Description = item.Description,
+            Category = item.Category
+        };
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, EventFormViewModel model)
+    {
+        if (id != model.Id)
+        {
+            return BadRequest();
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var item = await _context.EventItems.FirstOrDefaultAsync(e => e.Id == id);
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        if (item.OrganizerId != userId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        if (model.EndAtUtc.HasValue && model.EndAtUtc < model.StartAtUtc)
+        {
+            ModelState.AddModelError(nameof(model.EndAtUtc), "End time must be after start time.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        item.Title = model.Title.Trim();
+        item.StartAtUtc = model.StartAtUtc;
+        item.EndAtUtc = model.EndAtUtc;
+        item.Location = model.Location.Trim();
+        item.Description = model.Description;
+        item.Category = model.Category;
+
+        await _context.SaveChangesAsync();
+        TempData["Message"] = "Event updated.";
+        return RedirectToAction(nameof(Details), new { id = item.Id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var item = await _context.EventItems.FirstOrDefaultAsync(e => e.Id == id);
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        if (item.OrganizerId != userId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        _context.EventItems.Remove(item);
+        await _context.SaveChangesAsync();
+
+        TempData["Message"] = "Event deleted.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> Details(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var item = await _context.EventItems
+            .Include(e => e.Organizer)
+            .Include(e => e.Attendees)
+                .ThenInclude(a => a.User)
+            .Include(e => e.Invitations)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        ViewBag.CurrentAttendance = userId is null
+            ? null
+            : item.Attendees.FirstOrDefault(a => a.UserId == userId)?.Status ?? EventParticipationStatus.Upcoming;
+
+        return View(item);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RSVP(int id, EventParticipationStatus status)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var eventItem = await _context.EventItems.FindAsync(id);
+        if (eventItem is null)
+        {
+            return NotFound();
+        }
+
+        var attendance = await _context.EventAttendances
+            .FirstOrDefaultAsync(a => a.EventItemId == id && a.UserId == userId);
+
+        if (attendance is null)
+        {
+            attendance = new EventAttendance
+            {
+                EventItemId = id,
+                UserId = userId,
+                Status = status,
+                UpdatedAtUtc = DateTime.UtcNow
+            };
+            _context.EventAttendances.Add(attendance);
+        }
+        else
+        {
+            attendance.Status = status;
+            attendance.UpdatedAtUtc = DateTime.UtcNow;
+        }
+
+        var invitations = await _context.EventInvitations
+            .Where(i => i.EventItemId == id && i.InviteeUserId == userId)
+            .ToListAsync();
+
+        foreach (var invitation in invitations)
+        {
+            invitation.Status = status;
+            invitation.RespondedAtUtc = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+        TempData["Message"] = "RSVP updated.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Invite(InvitationViewModel model)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var eventItem = await _context.EventItems.FindAsync(model.EventId);
+        if (eventItem is null)
+        {
+            return NotFound();
+        }
+
+        if (eventItem.OrganizerId != userId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Please provide a valid email address.";
+            return RedirectToAction(nameof(Details), new { id = model.EventId });
+        }
+
+        var email = model.InviteeEmail.Trim().ToLower();
+        var existing = await _context.EventInvitations
+            .AnyAsync(i => i.EventItemId == model.EventId && i.InviteeEmail == email);
+
+        if (existing)
+        {
+            TempData["Error"] = "An invitation already exists for this email.";
+            return RedirectToAction(nameof(Details), new { id = model.EventId });
+        }
+
+        var invitee = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        _context.EventInvitations.Add(new EventInvitation
+        {
+            EventItemId = model.EventId,
+            InviterId = userId,
+            InviteeEmail = email,
+            InviteeUserId = invitee?.Id,
+            Status = EventParticipationStatus.Upcoming,
+            SentAtUtc = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
+        TempData["Message"] = "Invitation sent.";
+        return RedirectToAction(nameof(Details), new { id = model.EventId });
+    }
+
+    public async Task<IActionResult> Invitations()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var email = User.FindFirstValue(ClaimTypes.Email);
+
+        var invitations = await _context.EventInvitations
+            .Include(i => i.EventItem)
+            .Where(i => i.InviteeUserId == userId || (email != null && i.InviteeEmail == email))
+            .OrderBy(i => i.EventItem!.StartAtUtc)
+            .Select(i => new EventInvitationListItem
+            {
+                InvitationId = i.Id,
+                EventTitle = i.EventItem!.Title,
+                StartAtUtc = i.EventItem.StartAtUtc,
+                Location = i.EventItem.Location,
+                Status = i.Status
+            })
+            .ToListAsync();
+
+        return View(invitations);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RespondInvitation(int invitationId, EventParticipationStatus status)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var email = User.FindFirstValue(ClaimTypes.Email);
+
+        var invitation = await _context.EventInvitations
+            .Include(i => i.EventItem)
+            .FirstOrDefaultAsync(i => i.Id == invitationId);
+
+        if (invitation is null)
+        {
+            return NotFound();
+        }
+
+        if (invitation.InviteeUserId != userId && (email is null || invitation.InviteeEmail != email))
+        {
+            return Forbid();
+        }
+
+        invitation.InviteeUserId ??= userId;
+        invitation.Status = status;
+        invitation.RespondedAtUtc = DateTime.UtcNow;
+
+        var attendance = await _context.EventAttendances
+            .FirstOrDefaultAsync(a => a.EventItemId == invitation.EventItemId && a.UserId == userId);
+
+        if (attendance is null)
+        {
+            _context.EventAttendances.Add(new EventAttendance
+            {
+                EventItemId = invitation.EventItemId,
+                UserId = userId,
+                Status = status,
+                UpdatedAtUtc = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            attendance.Status = status;
+            attendance.UpdatedAtUtc = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+        TempData["Message"] = "Invitation response saved.";
+        return RedirectToAction(nameof(Invitations));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AiDraftDescription(EventFormViewModel model)
+    {
+        if (string.IsNullOrWhiteSpace(model.Title) || string.IsNullOrWhiteSpace(model.Location))
+        {
+            TempData["Error"] = "Title and location are required for AI draft.";
+            return RedirectToAction(nameof(Create));
+        }
+
+        var prompt = $"""
+You are helping curate cultural events for a mini library app.
+Write a concise event description (max 140 words) for a {(model.Category == EventCategory.Book ? "book" : "art")} event.
+Title: {model.Title}
+Location: {model.Location}
+Start UTC: {model.StartAtUtc:O}
+Return only plain text.
+""";
+
+        var aiText = await _geminiService.GenerateBookInsightsAsync(prompt);
+        TempData["AiEventDescription"] = aiText;
+        TempData["AiEventTitle"] = model.Title;
+        TempData["AiEventLocation"] = model.Location;
+        TempData["AiEventStartAtUtc"] = model.StartAtUtc.ToString("O");
+        TempData["AiEventCategory"] = model.Category.ToString();
+
+        return RedirectToAction(nameof(Create));
+    }
+}

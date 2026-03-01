@@ -65,5 +65,32 @@ public static class SeedData
                 });
             await context.SaveChangesAsync();
         }
+
+
+        if (!context.EventItems.Any() && admin is not null)
+        {
+            context.EventItems.AddRange(
+                new EventItem
+                {
+                    Title = "Modern Poetry Circle",
+                    Category = EventCategory.Book,
+                    StartAtUtc = DateTime.UtcNow.AddDays(7),
+                    Location = "Main Reading Hall",
+                    Description = "A guided discussion on contemporary poetry and spoken-word selections.",
+                    OrganizerId = admin.Id,
+                    CreatedAtUtc = DateTime.UtcNow
+                },
+                new EventItem
+                {
+                    Title = "Community Art Showcase",
+                    Category = EventCategory.Art,
+                    StartAtUtc = DateTime.UtcNow.AddDays(10),
+                    Location = "Gallery Corner",
+                    Description = "Bring your favorite art books and discover local visual artists.",
+                    OrganizerId = admin.Id,
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+            await context.SaveChangesAsync();
+        }
     }
 }

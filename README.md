@@ -1,33 +1,47 @@
-# Mini Library Management System (ASP.NET Core + SQLite + Gemini)
+# Mini Library + Event Scheduler (ASP.NET Core + SQLite + Gemini)
 
-This project is an ASP.NET Core MVC web app that implements a mini library system with:
+This project is an ASP.NET Core MVC web app that combines:
 
+- **Mini library management** for books and loans.
+- **Book & art event scheduling** with invitations and RSVP tracking.
+
+## Features
+
+### Library
 - **Book management** (Admin): add, edit, delete books.
 - **Check-in / Check-out** (authenticated users): borrow and return books.
 - **Search & filtering**: by title, author, ISBN, and genre.
+
+### Event Scheduler (Book & Art Focus)
+- **Event management**: create, edit, delete events with title, date/time, location, description, and category.
+- **Status tracking**: RSVP as `Upcoming`, `Attending`, `Maybe`, or `Declined`.
+- **Invitations**: invite users by email, view your invitations, and respond in one click.
+- **Search**: filter by title/description, location, date range, and category.
+- **AI feature**: generate an event description draft via Gemini.
+
+### Auth, Roles, and AI
 - **Authentication + SSO**:
   - Built-in ASP.NET Core Identity (local username/password).
   - Optional Google OAuth login (SSO) if credentials are configured.
 - **Roles and permissions**:
-  - `Admin`: full CRUD for books.
-  - `Member`: can search, borrow, return, and use AI features.
-- **AI feature (Gemini free API)**:
-  - “AI Insights” button calls Gemini (`gemini-1.5-flash`) to generate concise summary, ideal audience, and discussion questions.
+  - `Admin`: full CRUD for books/events.
+  - `Member`: can search, borrow/return, RSVP, and use AI features.
+- **AI features (Gemini free API)**:
+  - Book insights.
+  - Event description drafting.
 
 ## Tech Stack
 
 - ASP.NET Core 8 MVC + Identity
-- Entity Framework Core + SQLite (free local database)
+- Entity Framework Core + SQLite
 - Google Gemini API (`gemini-1.5-flash`)
 
 ## How to Run
 
-## 1) Prerequisites
-
+### 1) Prerequisites
 - .NET 8 SDK installed
 
-## 2) Configure app settings
-
+### 2) Configure app settings
 Edit `appsettings.json` (or use environment variables):
 
 ```json
@@ -51,14 +65,14 @@ You can also set Gemini key via env var:
 export GEMINI_API_KEY="your_key_here"
 ```
 
-## 3) Run
+### 3) Run
 
 ```bash
 dotnet restore
 dotnet run
 ```
 
-App opens on the URLs shown in terminal (`launchSettings.json` default: `https://localhost:7043` / `http://localhost:5043`).
+App URLs are shown in terminal (`launchSettings.json` default: `https://localhost:7043` / `http://localhost:5043`).
 
 ## Default Seeded Account
 
@@ -67,10 +81,16 @@ On first run, the app creates:
 - Admin user: `admin@minilibrary.local`
 - Password: `Admin123!`
 
-It also seeds 2 sample books.
+It also seeds two sample books.
 
-## Notes
+## Deployment
 
-- Database migrations are applied automatically at startup.
-- If Google OAuth credentials are empty, local identity login still works.
-- If Gemini API key is missing, AI insights returns a friendly configuration message.
+You can deploy this app to any ASP.NET Core host (Azure App Service, Render, Railway, Fly.io, etc.) using a standard `dotnet publish` pipeline.
+
+Example publish command:
+
+```bash
+dotnet publish -c Release -o ./publish
+```
+
+Then run the published output on your chosen provider with the same environment variables (`ConnectionStrings__DefaultConnection`, `Gemini__ApiKey`, optional Google OAuth keys).
