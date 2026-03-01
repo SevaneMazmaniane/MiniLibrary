@@ -1,0 +1,87 @@
+@model BookListViewModel
+@{
+    var genres = ViewBag.Genres as List<string> ?? new List<string>();
+}
+
+<h1>Mini Library Management</h1>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert error">@error</div>
+}
+@if (TempData["AiInsights"] is string ai)
+{
+    <div class="alert ai">
+        <strong>Gemini insights for @TempData["AiInsightsBook"]</strong>
+        <pre>@ai</pre>
+    </div>
+}
+
+<form method="get" class="search-row">
+    <input type="text" name="search" value="@Model.Search" placeholder="Search by title, author, ISBN" />
+    <select name="genre">
+        <option value="">All genres</option>
+        @foreach (var genre in genres)
+        {
+            <option value="@genre" selected="@(genre == Model.Genre)">@genre</option>
+        }
+    </select>
+    <button type="submit">Search</button>
+    <a asp-action="Index">Reset</a>
+</form>
+
+@if (User.IsInRole("Admin"))
+{
+    <p><a asp-action="Create">+ Add Book</a></p>
+}
+
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Genre</th>
+            <th>ISBN</th>
+            <th>Copies</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var b in Model.Books)
+    {
+        <tr>
+            <td>@b.Title</td>
+            <td>@b.Author</td>
+            <td>@b.Genre</td>
+            <td>@b.Isbn</td>
+            <td>@b.AvailableCopies/@b.TotalCopies</td>
+            <td>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form asp-action="Checkout" method="post" style="display:inline">
+                        <input type="hidden" name="id" value="@b.Id" />
+                        <button type="submit" @(b.AvailableCopies < 1 ? "disabled" : "")>Borrow</button>
+                    </form>
+                    <form asp-action="Checkin" method="post" style="display:inline">
+                        <input type="hidden" name="id" value="@b.Id" />
+                        <button type="submit">Return</button>
+                    </form>
+                    <form asp-action="AiInsights" method="post" style="display:inline">
+                        <input type="hidden" name="id" value="@b.Id" />
+                        <button type="submit">AI Insights</button>
+                    </form>
+                }
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Edit" asp-route-id="@b.Id">Edit</a>
+                    <form asp-action="Delete" method="post" style="display:inline">
+                        <input type="hidden" name="id" value="@b.Id" />
+                        <button type="submit">Delete</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

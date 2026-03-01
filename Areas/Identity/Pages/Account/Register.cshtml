@@ -1,0 +1,28 @@
+@page
+@model MiniLibrary.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<h1>Register</h1>
+
+<form method="post">
+    <label>Email <input asp-for="Input.Email" /></label>
+    <span asp-validation-for="Input.Email"></span>
+
+    <label>Display Name <input asp-for="Input.DisplayName" /></label>
+    <span asp-validation-for="Input.DisplayName"></span>
+
+    <label>Password <input asp-for="Input.Password" type="password" /></label>
+    <span asp-validation-for="Input.Password"></span>
+
+    <label>Confirm Password <input asp-for="Input.ConfirmPassword" type="password" /></label>
+    <span asp-validation-for="Input.ConfirmPassword"></span>
+
+    <button type="submit">Create Account</button>
+</form>
+
+<p>
+    Already have an account? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Login</a>
+</p>
+
