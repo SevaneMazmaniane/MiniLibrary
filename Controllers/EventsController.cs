@@ -307,7 +307,8 @@ public class EventsController : Controller
             return RedirectToAction(nameof(Details), new { id = model.EventId });
         }
 
-        var invitee = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var invitee = await _context.Users
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == email.ToUpperInvariant());
 
         _context.EventInvitations.Add(new EventInvitation
         {
@@ -348,7 +349,7 @@ public class EventsController : Controller
                     StartAtUtc = i.EventItem.StartAtUtc,
                     Location = i.EventItem.Location,
                     Status = i.Status,
-                    InviteeEmail = i.InviteeUser != null ? i.InviteeUser.Email : i.InviteeEmail,
+                    InviteeEmail = i.InviteeUser != null ? (i.InviteeUser.Email ?? i.InviteeEmail) : i.InviteeEmail,
                     SentAtUtc = i.SentAtUtc,
                     RespondedAtUtc = i.RespondedAtUtc,
                     CanRespond = false
@@ -370,7 +371,7 @@ public class EventsController : Controller
                     StartAtUtc = i.EventItem.StartAtUtc,
                     Location = i.EventItem.Location,
                     Status = i.Status,
-                    InviterEmail = i.Inviter != null ? i.Inviter.Email : null,
+                    InviterEmail = i.Inviter != null ? (i.Inviter.Email ?? i.Inviter.UserName) : null,
                     SentAtUtc = i.SentAtUtc,
                     RespondedAtUtc = i.RespondedAtUtc,
                     CanRespond = true
