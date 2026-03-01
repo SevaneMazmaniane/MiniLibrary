@@ -22,8 +22,8 @@ public class GeminiService : IGeminiService
             return "Gemini API key is not configured. Set Gemini:ApiKey in appsettings or GEMINI_API_KEY env var.";
         }
 
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}";
-
+        var model = "models/gemini-2.0-flash"; // or models/gemini-2.5-flash
+        var url = $"https://generativelanguage.googleapis.com/v1/{model}:generateContent?key={apiKey}";
         var requestBody = new
         {
             contents = new[]
