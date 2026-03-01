@@ -7,7 +7,10 @@
     <h1 class="h3 mb-0">Mini Library Management</h1>
     @if (User.IsInRole("Admin"))
     {
-        <a asp-action="Create" class="btn btn-success">+ Add Book</a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-info text-white" data-bs-toggle="collapse" data-bs-target="#aiAddPanel" aria-expanded="false" aria-controls="aiAddPanel">Add with AI</button>
+            <a asp-action="Create" class="btn btn-success">+ Add Book</a>
+        </div>
     }
 </div>
 
@@ -20,6 +23,61 @@
     <div class="alert alert-info">
         <strong>Gemini insights for @TempData["AiInsightsBook"]</strong>
         <pre class="mb-0">@ai</pre>
+    </div>
+}
+@if (TempData["AiRaw"] is string aiRaw)
+{
+    <div class="alert alert-warning">
+        <strong>Raw AI response</strong>
+        <pre class="mb-0">@aiRaw</pre>
+    </div>
+}
+
+@if (User.IsInRole("Admin"))
+{
+    var aiTitle = TempData["AiSuggestTitle"] as string;
+    var aiAuthor = TempData["AiSuggestAuthor"] as string;
+    var aiGenre = TempData["AiSuggestGenre"] as string;
+    var aiIsbn = TempData["AiSuggestIsbn"] as string;
+    var showSuggestion = !string.IsNullOrWhiteSpace(aiTitle) && !string.IsNullOrWhiteSpace(aiAuthor);
+
+    <div class="collapse mb-3" id="aiAddPanel">
+        <div class="card card-body border-info">
+            <h2 class="h5">Add with AI</h2>
+            <form asp-action="AiSuggestBook" method="post" class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label for="aiTitle" class="form-label">Book name</label>
+                    <input id="aiTitle" name="title" class="form-control" required />
+                </div>
+                <div class="col-md-5">
+                    <label for="aiAuthor" class="form-label">Author name (optional)</label>
+                    <input id="aiAuthor" name="author" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-info text-white w-100">Submit</button>
+                </div>
+            </form>
+
+            @if (showSuggestion)
+            {
+                <hr />
+                <h3 class="h6">AI suggestion (confirm to add)</h3>
+                <ul class="mb-3">
+                    <li><strong>Title:</strong> @aiTitle</li>
+                    <li><strong>Author:</strong> @aiAuthor</li>
+                    <li><strong>Genre:</strong> @(string.IsNullOrWhiteSpace(aiGenre) ? "Unknown" : aiGenre)</li>
+                    <li><strong>ISBN:</strong> @(string.IsNullOrWhiteSpace(aiIsbn) ? "Unknown" : aiIsbn)</li>
+                </ul>
+
+                <form asp-action="AddAiBook" method="post" class="d-inline">
+                    <input type="hidden" name="title" value="@aiTitle" />
+                    <input type="hidden" name="author" value="@aiAuthor" />
+                    <input type="hidden" name="genre" value="@aiGenre" />
+                    <input type="hidden" name="isbn" value="@aiIsbn" />
+                    <button type="submit" class="btn btn-success">Confirm & Add</button>
+                </form>
+            }
+        </div>
     </div>
 }
 
