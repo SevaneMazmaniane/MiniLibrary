@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Event Details";
     var currentAttendance = ViewBag.CurrentAttendance as MiniLibrary.Models.EventParticipationStatus?;
-    var canManage = User.IsInRole("Admin") || User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.OrganizerId;
+    var canManage = User.IsInRole("Admin");
 }
 
 @if (TempData["Message"] is string message)
