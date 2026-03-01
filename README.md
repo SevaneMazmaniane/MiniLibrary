@@ -1,96 +1,192 @@
-# Mini Library + Event Scheduler (ASP.NET Core + SQLite + Gemini)
+# MiniLibrary
 
-This project is an ASP.NET Core MVC web app that combines:
+MiniLibrary is an ASP.NET Core MVC application for managing books and cultural events in one place.
 
-- **Mini library management** for books and loans.
-- **Book & art event scheduling** with invitations and RSVP tracking.
+It includes:
+- A **library module** (catalog + borrow/return).
+- An **events module** (create events, invite by email, RSVP, invitations inbox/sent list).
+- **Authentication and roles** using ASP.NET Core Identity.
+- **AI-assisted content** (Gemini) for book insights and event description drafting.
 
-## Features
-
-### Library
-- **Book management** (Admin): add, edit, delete books.
-- **Check-in / Check-out** (authenticated users): borrow and return books.
-- **Search & filtering**: by title, author, ISBN, and genre.
-
-### Event Scheduler (Book & Art Focus)
-- **Event management**: create, edit, delete events with title, date/time, location, description, and category.
-- **Status tracking**: RSVP as `Upcoming`, `Attending`, `Maybe`, or `Declined`.
-- **Invitations**: invite users by email, view your invitations, and respond in one click.
-- **Search**: filter by title/description, location, date range, and category.
-- **AI feature**: generate an event description draft via Gemini.
-
-### Auth, Roles, and AI
-- **Authentication + SSO**:
-  - Built-in ASP.NET Core Identity (local username/password).
-  - Optional Google OAuth login (SSO) if credentials are configured.
-- **Roles and permissions**:
-  - `Admin`: full CRUD for books/events.
-  - `Member`: can search, borrow/return, RSVP, and use AI features.
-- **AI features (Gemini free API)**:
-  - Book insights.
-  - Event description drafting.
+---
 
 ## Tech Stack
 
-- ASP.NET Core 8 MVC + Identity
-- Entity Framework Core + SQLite
-- Google Gemini API (`gemini-1.5-flash`)
+- .NET 8
+- ASP.NET Core MVC + Razor Pages (Identity)
+- Entity Framework Core
+- SQLite
+- Optional Google OAuth
+- Optional Gemini API
 
-## How to Run
+---
 
-### 1) Prerequisites
-- .NET 8 SDK installed
+## Features
 
-### 2) Configure app settings
-Edit `appsettings.json` (or use environment variables):
+## 1) Books
+
+- Browse all books.
+- Search by title, author, ISBN.
+- Filter by genre.
+- Borrow and return books (authenticated users).
+- Admin can create, edit, and delete books.
+- AI-generated book insights.
+
+## 2) Events
+
+- Browse and search book/art events.
+- Filter by date/location/category.
+- RSVP status tracking: `Upcoming`, `Attending`, `Maybe`, `Declined`.
+- Admin can create/edit/delete events.
+- Admin can invite users by email.
+- Invitations page:
+  - Admin sees invitations sent (who + event + status).
+  - Non-admin sees invitations received and can respond.
+- AI draft/enhance event descriptions.
+
+## 3) Account Dashboard
+
+- Personal account page with:
+  - Borrowed books history.
+  - Attended events history.
+
+## 4) Authentication & Authorization
+
+- Local Identity login/register.
+- Role-based authorization (`Admin`, `Member`).
+- Optional Google SSO if configured.
+
+---
+
+## Prerequisites
+
+- .NET 8 SDK installed.
+
+Check:
+
+```bash
+dotnet --version
+```
+
+---
+
+## Configuration
+
+Update `appsettings.json` (or use environment variables):
 
 ```json
-"ConnectionStrings": {
-  "DefaultConnection": "Data Source=minilibrary.db"
-},
-"Authentication": {
-  "Google": {
-    "ClientId": "<your_google_client_id>",
-    "ClientSecret": "<your_google_client_secret>"
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=minilibrary.db"
+  },
+  "Authentication": {
+    "Google": {
+      "ClientId": "",
+      "ClientSecret": ""
+    }
+  },
+  "Gemini": {
+    "ApiKey": ""
   }
-},
-"Gemini": {
-  "ApiKey": "<your_gemini_api_key>"
 }
 ```
 
-You can also set Gemini key via env var:
+### Environment variable alternative for Gemini
 
 ```bash
 export GEMINI_API_KEY="your_key_here"
 ```
 
-### 3) Run
+---
+
+## How to Run (Local)
+
+1. Restore packages:
 
 ```bash
 dotnet restore
+```
+
+2. Run the app:
+
+```bash
 dotnet run
 ```
 
-App URLs are shown in terminal (`launchSettings.json` default: `https://localhost:7043` / `http://localhost:5043`).
+3. Open one of the URLs shown in terminal (typically from `launchSettings.json`):
+- `https://localhost:7043`
+- `http://localhost:5043`
 
-## Default Seeded Account
+On startup, the app automatically applies migrations and seeds initial data.
 
-On first run, the app creates:
+---
 
-- Admin user: `admin@minilibrary.local`
-- Password: `Admin123!`
+## Seeded Data & Credentials
 
-It also seeds two sample books.
+The app seeds roles, one admin user, sample books, and sample events.
 
-## Deployment
+### Roles seeded
+- `Admin`
+- `Member`
 
-You can deploy this app to any ASP.NET Core host (Azure App Service, Render, Railway, Fly.io, etc.) using a standard `dotnet publish` pipeline.
+### Default admin credentials
+- **Email:** `admin@minilibrary.local`
+- **Password:** `Admin123!`
 
-Example publish command:
+> Security note: change this password immediately in real environments.
 
-```bash
-dotnet publish -c Release -o ./publish
-```
+### Member credentials
+- There is **no default member password** seeded.
+- Create a member account from the Register page.
+- New users can register normally and use all non-admin features (admin-only actions still require the `Admin` role).
 
-Then run the published output on your chosen provider with the same environment variables (`ConnectionStrings__DefaultConnection`, `Gemini__ApiKey`, optional Google OAuth keys).
+---
+
+## Key User Flows
+
+### Admin
+- Login with admin account.
+- Manage books (create/edit/delete).
+- Manage events (create/edit/delete).
+- Send invitations by email from Event Details.
+- View sent invitations in `Events > Invitations`.
+
+### Member / Reader
+- Register and login.
+- Borrow/return books.
+- View personalized account dashboard.
+- Open `Events > Invitations` to see received invites and respond.
+- RSVP to events directly from Event Details.
+
+---
+
+## Troubleshooting
+
+### Invitation not visible for user
+- Ensure invite was sent to the same email as the user account.
+- Confirm user is logged in with that account.
+- Admin can verify sent invitations in `Events > Invitations`.
+
+### AI features not working
+- Verify `Gemini:ApiKey` (or `GEMINI_API_KEY`) is configured.
+- If key is missing, non-AI core features still work.
+
+### Google login not visible
+- Configure `Authentication:Google:ClientId` and `ClientSecret`.
+
+---
+
+## Project Structure (high level)
+
+- `Controllers/` → MVC controllers (`Books`, `Events`, `Account`, etc.)
+- `Views/` → Razor MVC views
+- `Areas/Identity/Pages/` → Identity UI pages (login/register)
+- `Data/` → EF Core DbContext + seed
+- `Models/` → Domain entities + view models
+- `wwwroot/` → static assets (CSS)
+
+---
+
+## License
+
+This project is for educational/demo purposes.
