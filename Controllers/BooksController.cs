@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -213,5 +214,112 @@ public class BooksController : Controller
         TempData["AiInsights"] = insights;
         TempData["AiInsightsBook"] = book.Title;
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AiSuggestBook(string title, string? author)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            TempData["Error"] = "Book title is required.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var trimmedTitle = title.Trim();
+        var trimmedAuthor = string.IsNullOrWhiteSpace(author) ? null : author.Trim();
+        var prompt = $"""
+            Return only valid minified JSON using this schema:
+            {"title":"string","author":"string","genre":"string|null","isbn":"string|null"}
+
+            Fill the best known values for this book. Use null when unknown.
+            Title: {trimmedTitle}
+            Author hint: {trimmedAuthor ?? "unknown"}
+            """;
+
+        var aiResponse = await _geminiService.GenerateBookInsightsAsync(prompt);
+        if (!TryParseAiBookSuggestion(aiResponse, out var suggestion))
+        {
+            TempData["Error"] = "Unable to parse AI response for book details. Please try again.";
+            TempData["AiRaw"] = aiResponse;
+            return RedirectToAction(nameof(Index));
+        }
+
+        TempData["AiSuggestTitle"] = suggestion.Title;
+        TempData["AiSuggestAuthor"] = suggestion.Author;
+        TempData["AiSuggestGenre"] = suggestion.Genre;
+        TempData["AiSuggestIsbn"] = suggestion.Isbn;
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddAiBook(string title, string author, string? genre, string? isbn)
+    {
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(author))
+        {
+            TempData["Error"] = "Title and author are required to add a book.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var book = new Book
+        {
+            Title = title.Trim(),
+            Author = author.Trim(),
+            Genre = string.IsNullOrWhiteSpace(genre) ? null : genre.Trim(),
+            Isbn = string.IsNullOrWhiteSpace(isbn) ? null : isbn.Trim(),
+            TotalCopies = 1,
+            AvailableCopies = 1
+        };
+
+        _context.Books.Add(book);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private static bool TryParseAiBookSuggestion(string aiResponse, out AiBookSuggestion suggestion)
+    {
+        suggestion = new AiBookSuggestion();
+        if (string.IsNullOrWhiteSpace(aiResponse))
+        {
+            return false;
+        }
+
+        var trimmed = aiResponse.Trim();
+        if (trimmed.StartsWith("```") && trimmed.EndsWith("```"))
+        {
+            trimmed = trimmed.Trim('`').Replace("json", string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+        }
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<AiBookSuggestion>(trimmed, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (parsed is null || string.IsNullOrWhiteSpace(parsed.Title) || string.IsNullOrWhiteSpace(parsed.Author))
+            {
+                return false;
+            }
+
+            suggestion = parsed;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private sealed class AiBookSuggestion
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Author { get; set; } = string.Empty;
+        public string? Genre { get; set; }
+        public string? Isbn { get; set; }
     }
 }
