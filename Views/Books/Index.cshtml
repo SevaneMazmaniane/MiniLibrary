@@ -1,6 +1,11 @@
 @model BookListViewModel
 @{
     var genres = ViewBag.Genres as List<string> ?? new List<string>();
+    var aiTitle = TempData["AiSuggestTitle"] as string;
+    var aiAuthor = TempData["AiSuggestAuthor"] as string;
+    var aiGenre = TempData["AiSuggestGenre"] as string;
+    var aiIsbn = TempData["AiSuggestIsbn"] as string;
+    var showSuggestion = !string.IsNullOrWhiteSpace(aiTitle) && !string.IsNullOrWhiteSpace(aiAuthor);
 }
 
 <div class="hero-panel mb-4">
@@ -13,7 +18,7 @@
         @if (User.IsInRole("Admin"))
         {
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-stone" data-bs-toggle="collapse" data-bs-target="#aiAddPanel" aria-expanded="false" aria-controls="aiAddPanel">Add with AI</button>
+                <button type="button" class="btn btn-stone" data-bs-toggle="collapse" data-bs-target="#aiAddPanel" aria-expanded="@(showSuggestion ? "true" : "false")" aria-controls="aiAddPanel">Add with AI</button>
                 <a asp-action="Create" class="btn btn-ink">+ Add Book</a>
             </div>
         }
@@ -41,13 +46,7 @@
 
 @if (User.IsInRole("Admin"))
 {
-    var aiTitle = TempData["AiSuggestTitle"] as string;
-    var aiAuthor = TempData["AiSuggestAuthor"] as string;
-    var aiGenre = TempData["AiSuggestGenre"] as string;
-    var aiIsbn = TempData["AiSuggestIsbn"] as string;
-    var showSuggestion = !string.IsNullOrWhiteSpace(aiTitle) && !string.IsNullOrWhiteSpace(aiAuthor);
-
-    <div class="collapse mb-4" id="aiAddPanel">
+    <div class="collapse @(showSuggestion ? "show" : string.Empty) mb-4" id="aiAddPanel">
         <div class="pillar-card p-4">
             <h2 class="h5 mb-3">AI Book Draft</h2>
             <form asp-action="AiSuggestBook" method="post" class="row g-2 align-items-end">
