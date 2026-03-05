@@ -121,6 +121,39 @@ On startup, the app automatically applies migrations and seeds initial data.
 
 ---
 
+## Deploy on Render (Free)
+
+This repository now includes a `render.yaml` blueprint and a production `Dockerfile` for one-click deployment from GitHub.
+
+### 1) Push this branch to GitHub
+
+```bash
+git push -u origin release/render-free
+```
+
+### 2) Create a new Web Service in Render
+
+- In Render, choose **New +** → **Blueprint**.
+- Connect your GitHub repository.
+- Select this `release/render-free` branch.
+- Render will detect `render.yaml`, build using the included `Dockerfile`, and provision the service.
+
+### 3) Configure optional secrets in Render
+
+Set these only if you use those integrations:
+
+- `GEMINI_API_KEY`
+- `Authentication__Google__ClientId`
+- `Authentication__Google__ClientSecret`
+
+### Notes for free tier
+
+- The default connection string uses SQLite at `/tmp/minilibrary.db` for compatibility.
+- Free instances have ephemeral filesystems, so DB contents can reset on restart/redeploy.
+- Migrations and seed data run automatically on startup.
+
+---
+
 ## Seeded Data & Credentials
 
 The app seeds roles, one admin user, sample books, and sample events.
